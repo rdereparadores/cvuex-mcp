@@ -1,0 +1,39 @@
+[project]
+name = "cvuex-mcp"
+version = "0.1.0"
+description = "Servidor MCP para el Campus Virtual de la Universidad de Extremadura (CVUEx)"
+authors = [
+    { name = "Iván", email = "ivruizl@alumnos.unex.es" }
+]
+requires-python = ">=3.12"
+dependencies = [
+    "httpx>=0.28.1",
+    "mcp>=2.2,<3",
+    "platformdirs>=4.11.12",
+    "playwright>=1.63.0",
+    "tzdata>=2026.4",
+]
+
+[project.scripts]
+cvuex-mcp = "cvuex_mcp.cli:main"
+
+[build-system]
+requires = ["uv_build>=0.12.18,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.16.8",
+]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+markers = ["browser: needs Playwright's Chromium (uv run playwright install chromium)"]
+
+[tool.ruff]
+line-length = 100
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]

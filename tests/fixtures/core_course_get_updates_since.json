@@ -1,0 +1,21 @@
+{
+  "instances": [
+    {
+      "contextlevel": "module",
+      "id": 1826525,
+      "updates": [
+        {
+          "name": "configuration",
+          "timeupdated": 1790070674
+        },
+        {
+          "name": "discussions",
+          "itemids": [
+            64213
+          ]
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

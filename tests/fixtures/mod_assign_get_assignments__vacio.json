@@ -1,0 +1,26 @@
+{
+  "courses": [
+    {
+      "id": 32338,
+      "fullname": "APRENDIZAJE AUTOMÁTICO Y APRENDIZAJE PROFUNDO",
+      "shortname": "32338",
+      "timemodified": 1790093867,
+      "assignments": []
+    },
+    {
+      "id": 32337,
+      "fullname": "COMPUTACIÓN GRÁFICA",
+      "shortname": "32337",
+      "timemodified": 1789908503,
+      "assignments": []
+    },
+    {
+      "id": 32327,
+      "fullname": "NORMATIVA, LEGISLACIÓN Y REGULACIÓN INFORMÁTICA",
+      "shortname": "32327",
+      "timemodified": 1789745737,
+      "assignments": []
+    }
+  ],
+  "warnings": []
+}
