@@ -12,15 +12,22 @@ logging.getLogger("httpx").setLevel(logging.WARNING)
 
 INSTRUCTIONS = """\
 Acceso de solo lectura a las aulas virtuales (AVUEx) del Campus Virtual de la Universidad
-de Extremadura, con la cuenta del propio alumno. Nada de lo que hagas modifica el campus.
+de Extremadura, con la cuenta del propio alumno. Nada de lo que hagas modifica el campus,
+salvo leer_debate, que puede marcar como leídos los mensajes del debate.
 
 Qué herramienta usar:
 - mis_asignaturas: qué asignaturas cursa y su id, que las demás aceptan para filtrar.
 - proximos_plazos: "¿qué tengo esta semana?": entregas, aperturas y cierres de
   actividades y eventos del calendario, por fecha.
 - estado_entregas: qué tareas faltan por entregar y la nota y comentarios de las entregadas.
+- calificaciones: nota total de cada asignatura; con asignatura_id, el detalle de cada
+  actividad (nota, peso, comentarios del profesor).
 - novedades: qué ha cambiado en las asignaturas (por defecto, desde la última consulta).
-- notificaciones: avisos del campus (foros, calificaciones...).
+- notificaciones: notificaciones del campus (foros, calificaciones...).
+- avisos: anuncios de los profesores y debates de los foros generales, con el comienzo
+  de cada mensaje.
+- leer_debate: un debate completo, con sus respuestas. Úsala solo cuando el alumno
+  quiera leerlo entero.
 - quien_soy: con qué cuenta está conectado el servidor.
 
 Las fechas están en hora de España (ISO 8601). Da al alumno los enlaces (url) cuando le

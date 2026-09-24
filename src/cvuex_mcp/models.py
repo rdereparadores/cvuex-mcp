@@ -112,3 +112,86 @@ class Notificacion(BaseModel):
 class ListaNotificaciones(BaseModel):
     sin_leer: int = Field(description="Total de notificaciones sin leer en el campus.")
     notificaciones: list[Notificacion] = Field(description="De la más reciente a la más antigua.")
+
+
+class Aviso(BaseModel):
+    asignatura: str | None
+    asignatura_id: int
+    foro: str
+    titulo: str
+    autor: str | None = Field(description="Quién lo publicó; null si el foro lo oculta.")
+    fecha: str | None = Field(description="Cuándo se publicó (ISO 8601, hora de España).")
+    ultima_respuesta: str | None = Field(description="Fecha de la última respuesta, si las hay.")
+    mensaje: str = Field(description="El mensaje en texto, recortado; leer_debate lo da completo.")
+    respuestas: int
+    fijado: bool = Field(description="El profesor lo ha fijado arriba del foro.")
+    debate_id: int = Field(description="Para leer el debate completo con leer_debate.")
+    url: str
+
+
+class ListaAvisos(BaseModel):
+    desde: str = Field(
+        description="Se incluyen los debates publicados o con respuestas desde aquí."
+    )
+    avisos: list[Aviso] = Field(description="Del más reciente al más antiguo.")
+
+
+class MensajeForo(BaseModel):
+    id: int
+    autor: str | None
+    fecha: str | None = Field(description="ISO 8601, hora de España.")
+    asunto: str
+    mensaje: str = Field(description="Completo, en texto.")
+    en_respuesta_a: int | None = Field(description="id del mensaje al que responde.")
+    privado: bool = Field(description="Respuesta privada, solo visible para algunos.")
+    adjuntos: list[str] = Field(description="Nombres de los ficheros adjuntos.")
+
+
+class Debate(BaseModel):
+    titulo: str
+    foro: str | None
+    asignatura: str | None
+    asignatura_id: int
+    url: str
+    mensajes: list[MensajeForo] = Field(description="En orden cronológico.")
+
+
+class NotaAsignatura(BaseModel):
+    asignatura: str | None
+    asignatura_id: int
+    nota: str | None = Field(
+        description="Nota total de la asignatura, como la muestra el campus; null si aún no hay."
+    )
+    url: str = Field(description="Informe de calificaciones de la asignatura.")
+
+
+class ItemCalificacion(BaseModel):
+    actividad: str
+    tipo: str = Field(
+        description="tarea, cuestionario..., 'ítem manual' (p. ej. un examen presencial) o "
+        "'total de categoría'."
+    )
+    categoria: str | None = Field(
+        description="Categoría del libro de calificaciones (p. ej. 'Prácticas'); null si el "
+        "ítem cuenta directamente en el total de la asignatura."
+    )
+    nota: str | None = Field(description="null si aún no está calificado.")
+    rango: str | None = Field(description="Nota mínima y máxima posibles.")
+    porcentaje: str | None
+    peso: str | None = Field(
+        description="Cuánto cuenta en su categoría (o en la asignatura), según lo calcula Moodle; "
+        "entre paréntesis, si no cuenta y por qué."
+    )
+    comentarios: str | None = Field(description="Comentarios del profesor.")
+    fecha: str | None = Field(description="Cuándo se calificó (ISO 8601, hora de España).")
+    url: str | None = Field(description="Enlace a la actividad, si es una actividad.")
+
+
+class Calificaciones(BaseModel):
+    asignaturas: list[NotaAsignatura] = Field(
+        description="Nota total de cada asignatura (solo la pedida, si se filtra)."
+    )
+    detalle: list[ItemCalificacion] = Field(
+        description="Solo al pedir una asignatura: sus actividades y totales de categoría, en el "
+        "orden del libro de calificaciones."
+    )

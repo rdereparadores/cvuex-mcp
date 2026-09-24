@@ -46,8 +46,10 @@ PERSON_NAME_KEYS = {
 }
 EMAIL_KEYS = {"email"}
 # "fullname" also names courses: it is personal only inside an object describing a person.
-PERSON_MARKERS = PERSON_NAME_KEYS | EMAIL_KEYS | {"profileimageurl", "userpictureurl"}
+PERSON_MARKERS = PERSON_NAME_KEYS | EMAIL_KEYS | {"initials", "profileimageurl", "userpictureurl"}
 USER_ID_KEYS = {"userid", "useridfrom", "useridto", "authorid", "usermodified"}
+# Links to a user's profile carry their id, e.g. forum post authors.
+PROFILE_URL_PATTERN = re.compile(r"(/user/(?:view|profile)\.php\?id=)(\d+)")
 # Official identification numbers (e.g. the student's ID); "idnumber" alone is a course code.
 PERSON_ID_NUMBER_KEYS = {"useridnumber"}
 FREE_TEXT_KEYS = {"text", "smallmessage", "fullmessage", "fullmessagehtml", "fullmessagetext"}
@@ -141,7 +143,9 @@ class Anonymizer:
         if isinstance(data, dict):
             is_person = not PERSON_MARKERS.isdisjoint(data)
             for key, value in data.items():
-                if not (isinstance(value, str) and value):
+                if key == "id" and is_person and isinstance(value, int):
+                    self._user_id(value)
+                elif not (isinstance(value, str) and value):
                     self._collect_people(value)
                 elif key in EMAIL_KEYS:
                     self._people.setdefault(value, f"persona{next(self._next_person)}@example.com")
@@ -154,14 +158,18 @@ class Anonymizer:
     def _person(self, real: str) -> str:
         return self._people.setdefault(real, f"Persona {next(self._next_person)}")
 
-    def _rewrite(self, data: Any, key: str = "") -> Any:
+    def _user_id(self, real: int) -> int:
+        return self._user_ids.setdefault(real, next(self._next_user_id))
+
+    def _rewrite(self, data: Any, key: str = "", in_person: bool = False) -> Any:
         if isinstance(data, dict):
-            return {k: self._rewrite(v, k) for k, v in data.items()}
+            is_person = not PERSON_MARKERS.isdisjoint(data)
+            return {k: self._rewrite(v, k, is_person) for k, v in data.items()}
         if isinstance(data, list):
             return [self._rewrite(item, key) for item in data[: self.max_items]]
-        if key in USER_ID_KEYS and isinstance(data, int) and data > 0:
-            return self._user_ids.setdefault(data, next(self._next_user_id))
-        if key.endswith(("imageurl", "pictureurl")):
+        if (key in USER_ID_KEYS or (key == "id" and in_person)) and isinstance(data, int):
+            return self._user_id(data) if data > 0 else data
+        if key.endswith(("imageurl", "pictureurl", "profileimage")):
             return "https://moodle.example/pix/u/f1.png"
         if key.endswith("initials") and isinstance(data, str):
             return "XX"
@@ -178,6 +186,9 @@ class Anonymizer:
         for real in sorted(self._people, key=len, reverse=True):
             text = text.replace(real, self._people[real])
         text = EMAIL_PATTERN.sub("persona@example.com", text)
+        text = PROFILE_URL_PATTERN.sub(
+            lambda match: f"{match[1]}{self._user_id(int(match[2]))}", text
+        )
         return text if len(text) <= self.max_text else text[: self.max_text] + "…"
 
 

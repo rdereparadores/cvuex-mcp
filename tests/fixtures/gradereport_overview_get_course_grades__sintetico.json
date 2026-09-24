@@ -1,0 +1,21 @@
+{
+  "grades": [
+    {
+      "courseid": 32338,
+      "grade": "7,40",
+      "rawgrade": "7.40000"
+    },
+    {
+      "courseid": 32337,
+      "grade": "-",
+      "rawgrade": null
+    },
+    {
+      "courseid": 31000,
+      "grade": "6,50",
+      "rawgrade": "6.50000",
+      "rank": 12
+    }
+  ],
+  "warnings": []
+}

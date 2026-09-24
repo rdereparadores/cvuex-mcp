@@ -1,0 +1,35 @@
+{
+  "gradeItems": [
+    {
+      "id": "300001",
+      "itemname": "Práctica 1",
+      "category": "Prácticas"
+    },
+    {
+      "id": "300002",
+      "itemname": "Práctica 2",
+      "category": "Prácticas"
+    },
+    {
+      "id": "300004",
+      "itemname": "Test tema 1",
+      "category": "Teoría"
+    },
+    {
+      "id": "300005",
+      "itemname": "Examen final",
+      "category": "Teoría"
+    },
+    {
+      "id": "300007",
+      "itemname": "Asistencia",
+      "category": "APRENDIZAJE AUTOMÁTICO Y APRENDIZAJE PROFUNDO"
+    },
+    {
+      "id": "300008",
+      "itemname": "Examen de recuperación (oculto)",
+      "category": "Teoría"
+    }
+  ],
+  "warnings": []
+}

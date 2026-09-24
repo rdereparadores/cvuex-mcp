@@ -2,7 +2,7 @@
 
 Servidor MCP para el Campus Virtual de la Universidad de Extremadura, centrado en el alumnado: trabaja con **AVUEx** (aulas regladas). Usa la sesión del propio alumno mediante el mismo inicio de sesión SSO que la app oficial de Moodle: la contraseña nunca pasa por este programa.
 
-**Solo lectura:** el servidor únicamente puede llamar a una lista cerrada de funciones de consulta de Moodle, nunca a las que modifican datos ni a las que registran accesos.
+**Solo lectura:** el servidor únicamente puede llamar a una lista cerrada de funciones de consulta de Moodle, nunca a las que modifican datos ni a las que registran accesos. La única excepción es `leer_debate`: si tienes activado el seguimiento de mensajes no leídos en un foro, Moodle marca como leídos los mensajes del debate, igual que al abrirlo en el navegador.
 
 Estado: F1 completada. Ver [PLAN.md](PLAN.md) y [FASE1.md](FASE1.md).
 
@@ -13,8 +13,11 @@ Estado: F1 completada. Ver [PLAN.md](PLAN.md) y [FASE1.md](FASE1.md).
 | `mis_asignaturas` | Asignaturas en curso, pasadas o futuras, con su id |
 | `proximos_plazos` | Entregas, aperturas y cierres de actividades y eventos del calendario, por fecha |
 | `estado_entregas` | Tareas sin entregar, en borrador o entregadas, con nota y comentarios del profesor |
+| `calificaciones` | Nota total de cada asignatura o, de una, el detalle por actividad y categoría |
 | `novedades` | Qué ha cambiado en las asignaturas desde la última consulta (o en las últimas N horas) |
 | `notificaciones` | Notificaciones del campus; consultarlas no las marca como leídas |
+| `avisos` | Anuncios de los profesores y debates de los foros generales, con el comienzo del mensaje |
+| `leer_debate` | Un debate completo con sus respuestas; puede marcarlos como leídos (ver arriba) |
 | `quien_soy` | Con qué cuenta está conectado el servidor |
 
 ## Instalación

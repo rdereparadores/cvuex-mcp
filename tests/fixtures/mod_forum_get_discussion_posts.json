@@ -1,0 +1,78 @@
+{
+  "posts": [
+    {
+      "id": 64213,
+      "subject": "Comienzo de clases de la Asignatura de Aprendizaje Automático y Profundo",
+      "replysubject": "Comienzo de clases de la Asignatura de Aprendizaje Automático y Profundo",
+      "label": "Comienzo de clases de la Asignatura de Aprendizaje Automático y Profundo por Persona 1",
+      "message": "<p>La asignatura de Aprendizaje Automático y Profundo(APP) del Máster de Ingeniería Informática tiene un horario síncrono y otro asíncrono, y están al 50% ambas (Máster Semipresencial). De las 2 horas (3 créditos) que aparecen de APP (el martes de 18:30h a 19:30h y el jueves de 17:30h a 18:30h), las que corresponden al horario virtual síncrono (presencial) y que se van a grabar y poner en el campus virtual, son las del martes de 18:30h a 19:30h. Así que nos vemos el próximo martes a las 18:30h en virtual a través de videoconferencia. Os enviaremos un enlace. </p>\r\n<p>Persona 2 y Persona 1</p>",
+      "messageformat": 1,
+      "author": {
+        "id": 1001,
+        "fullname": "Persona 1",
+        "initials": "XX",
+        "isdeleted": false,
+        "groups": [],
+        "urls": {
+          "profile": "https://campusvirtual.unex.es/zonauex/avuex/user/view.php?id=1001&course=32338",
+          "profileimage": "https://moodle.example/pix/u/f1.png"
+        }
+      },
+      "discussionid": 41804,
+      "hasparent": false,
+      "parentid": null,
+      "timecreated": 1790187375,
+      "timemodified": 1790187375,
+      "unread": null,
+      "isdeleted": false,
+      "isprivatereply": false,
+      "haswordcount": false,
+      "wordcount": null,
+      "charcount": null,
+      "capabilities": {
+        "view": true,
+        "edit": false,
+        "delete": false,
+        "split": false,
+        "reply": false,
+        "selfenrol": false,
+        "export": false,
+        "controlreadstatus": false,
+        "canreplyprivately": false
+      },
+      "urls": {
+        "view": "https://campusvirtual.unex.es/zonauex/avuex/mod/forum/discuss.php?d=41804#p64213",
+        "viewisolated": "https://campusvirtual.unex.es/zonauex/avuex/mod/forum/discuss.php?d=41804&parent=64213",
+        "viewparent": null,
+        "edit": null,
+        "delete": null,
+        "split": null,
+        "reply": null,
+        "export": null,
+        "markasread": null,
+        "markasunread": null,
+        "discuss": "https://campusvirtual.unex.es/zonauex/avuex/mod/forum/discuss.php?d=41804"
+      },
+      "attachments": [],
+      "messageinlinefiles": [],
+      "tags": [],
+      "html": {
+        "rating": null,
+        "taglist": null,
+        "authorsubheading": "de <a href=\"https://campusvirtual.unex.es/zonauex/avuex/user/view.php?id=1001&course=32338\">Persona 1</a> - <time datetime=\"2026-09-23T20:16:15+02:00\">miércoles, 23 de septiembre de 2026, 20:16</time>"
+      }
+    }
+  ],
+  "forumid": 72401,
+  "courseid": 32338,
+  "ratinginfo": {
+    "contextid": 2819997,
+    "component": "mod_forum",
+    "ratingarea": "post",
+    "canviewall": null,
+    "canviewany": null,
+    "scales": [],
+    "ratings": []
+  },
+  "warnings": []
+}

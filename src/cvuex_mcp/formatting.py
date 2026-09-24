@@ -58,6 +58,15 @@ def module_url(site: Site, module_name: str, course_module_id: int) -> str:
     return f"{site.url}/mod/{module_name}/view.php?id={course_module_id}"
 
 
+def discussion_url(site: Site, discussion_id: int) -> str:
+    return f"{site.url}/mod/forum/discuss.php?d={discussion_id}"
+
+
+def grades_url(site: Site, course_id: int) -> str:
+    """The student's grade report of a course."""
+    return f"{site.url}/grade/report/user/index.php?id={course_id}"
+
+
 # Moodle module names → how the Spanish UI calls them.
 MODULE_TYPES = {
     "assign": "tarea",

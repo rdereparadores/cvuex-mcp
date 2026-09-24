@@ -6,9 +6,18 @@ registers its tools with ``register``.
 
 from mcp.server.mcpserver import MCPServer
 
-from cvuex_mcp.tools import account, assignments, changes, courses, deadlines, notifications
+from cvuex_mcp.tools import (
+    account,
+    assignments,
+    changes,
+    courses,
+    deadlines,
+    forums,
+    grades,
+    notifications,
+)
 
-AREAS = (account, courses, deadlines, assignments, changes, notifications)
+AREAS = (account, courses, deadlines, assignments, changes, notifications, forums, grades)
 
 
 def register_all(mcp: MCPServer) -> None:

@@ -1,7 +1,9 @@
 """End-to-end tests of the MCP tools through an in-memory MCP client."""
 
+import time
+
 import pytest
-from helpers import FakeMoodle, load_fixture
+from helpers import COURSES, FakeMoodle, load_fixture
 from mcp.client import Client
 
 from cvuex_mcp import runtime, server
@@ -12,6 +14,7 @@ from cvuex_mcp.storage import HOME_ENV_VAR
 from cvuex_mcp.tools import changes as changes_tool
 
 SITE_INFO = "core_webservice_get_site_info"
+NO_DISCUSSIONS = {"discussions": [], "warnings": []}
 
 
 @pytest.fixture
@@ -67,9 +70,6 @@ async def test_new_login_is_used_without_restarting(store, fake_moodle):
         await client.call_tool("quien_soy", {})
 
     assert [call["wstoken"] for call in fake_moodle.calls] == ["first", "second"]
-
-
-COURSES = "core_course_get_enrolled_courses_by_timeline_classification"
 
 
 async def test_mis_asignaturas(store, fake_moodle):
@@ -204,9 +204,65 @@ async def test_notificaciones_rejects_invalid_limit(store, fake_moodle):
     assert fake_moodle.calls == []
 
 
+FORUMS = "mod_forum_get_forums_by_courses"
+DISCUSSIONS = "mod_forum_get_forum_discussions"
+POSTS = "mod_forum_get_discussion_posts"
+
+
+async def test_avisos_and_leer_debate(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    discussions = load_fixture(DISCUSSIONS)
+    discussions["discussions"][0]["timemodified"] = int(time.time()) - 3600
+    fake_moodle.answers |= {
+        COURSES: load_fixture(COURSES),
+        FORUMS: load_fixture(FORUMS),
+        DISCUSSIONS: lambda form: discussions if form["forumid"] == "72401" else NO_DISCUSSIONS,
+        POSTS: load_fixture(POSTS),
+    }
+
+    [announcement] = (await call("avisos")).structured_content["avisos"]
+    assert announcement["foro"] == "Foro general de la asignatura"
+
+    result = await call("leer_debate", {"debate_id": announcement["debate_id"]})
+    assert result.structured_content["titulo"] == announcement["titulo"]
+    assert len(result.structured_content["mensajes"]) == 1
+
+
+GRADE_ITEMS = "gradereport_user_get_grade_items"
+
+
+async def test_calificaciones(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers |= {
+        COURSES: load_fixture(COURSES),
+        GRADE_ITEMS: load_fixture(f"{GRADE_ITEMS}__sintetico"),
+        "core_grades_get_gradeitems": load_fixture("core_grades_get_gradeitems__sintetico"),
+    }
+    result = (await call("calificaciones", {"asignatura_id": 32338})).structured_content
+    assert result["asignaturas"][0]["nota"] == "7,40"
+    assert len(result["detalle"]) == 7
+
+
+async def test_only_leer_debate_may_change_something():
+    """Reading a discussion may mark its posts as read; everything else is read-only."""
+    async with Client(server.mcp) as client:
+        tools = (await client.list_tools()).tools
+    changing = [tool.name for tool in tools if not tool.annotations.read_only_hint]
+    assert changing == ["leer_debate"]
+    assert all(tool.annotations.destructive_hint is not True for tool in tools)
+
+
 async def test_instructions_mention_every_tool():
     async with Client(server.mcp) as client:
         tools = [tool.name for tool in (await client.list_tools()).tools]
-    assert len(tools) == 6
+    assert len(tools) == 9
     for tool in tools:
         assert tool in server.INSTRUCTIONS, tool
+
+
+async def test_leer_debate_with_unknown_id(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers[POSTS] = {"exception": "Error", "message": "PHP error"}
+    result = await call("leer_debate", {"debate_id": 1})
+    assert result.is_error
+    assert "Usa un debate_id de los que da avisos" in result.content[0].text

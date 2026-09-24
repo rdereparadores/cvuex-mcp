@@ -97,3 +97,25 @@ def test_personal_id_numbers_are_replaced_but_course_codes_kept():
         "courseidnumber": "24735",
         "idnumber": "24735",
     }
+
+
+def test_post_authors_are_replaced_with_their_profile_links():
+    author = {
+        "id": 42,
+        "fullname": "Ana Pérez",
+        "initials": "AP",
+        "urls": {
+            "profile": "https://campus/user/view.php?id=42&course=7",
+            "profileimage": "https://campus/pluginfile.php/99/user/icon/f1",
+        },
+    }
+    post = {"id": 5, "label": "Aviso por Ana Pérez", "author": author}
+    result = anonymize({"posts": [post]})["posts"][0]
+    fake_id = result["author"]["id"]
+    assert fake_id != 42
+    assert result["id"] == 5
+    assert result["label"] == f"Aviso por {result['author']['fullname']}"
+    assert result["author"]["urls"] == {
+        "profile": f"https://campus/user/view.php?id={fake_id}&course=7",
+        "profileimage": "https://moodle.example/pix/u/f1.png",
+    }

@@ -24,4 +24,12 @@ ALLOWED_FUNCTIONS: dict[str, float] = {
     "core_course_get_contents": 600,
     # Notifications
     "message_popup_get_popup_notifications": 60,
+    # Forums. get_discussion_posts marks the posts as read if the student tracks the forum.
+    "mod_forum_get_forums_by_courses": 600,
+    "mod_forum_get_forum_discussions": 120,
+    "mod_forum_get_discussion_posts": 60,
+    # Grades. core_grades_get_gradeitems only gives the category of each item.
+    "gradereport_overview_get_course_grades": 300,
+    "gradereport_user_get_grade_items": 120,
+    "core_grades_get_gradeitems": 600,
 }
