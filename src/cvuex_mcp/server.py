@@ -16,7 +16,13 @@ from pydantic import Field
 from cvuex_mcp.cache import TTLCache
 from cvuex_mcp.campus import Campus, CourseClassification
 from cvuex_mcp.credentials import CredentialStore
-from cvuex_mcp.models import ListaAsignaturas, ListaEntregas, ListaNovedades, ListaPlazos
+from cvuex_mcp.models import (
+    ListaAsignaturas,
+    ListaEntregas,
+    ListaNotificaciones,
+    ListaNovedades,
+    ListaPlazos,
+)
 from cvuex_mcp.moodle import InvalidTokenError, MoodleClient, MoodleError, new_http_client
 from cvuex_mcp.rate_limit import RateLimiter
 from cvuex_mcp.session import NotLoggedInError, expired_session_message, load_token
@@ -46,14 +52,25 @@ async def lifespan(_server: MCPServer) -> AsyncIterator[ServerState]:
         yield ServerState(http=http, rate_limiter=RateLimiter())
 
 
-mcp = MCPServer(
-    name="cvuex",
-    instructions=(
-        "Acceso de solo lectura a las aulas virtuales (AVUEx) del Campus Virtual de la "
-        "Universidad de Extremadura, con la cuenta del propio alumno."
-    ),
-    lifespan=lifespan,
-)
+INSTRUCTIONS = """\
+Acceso de solo lectura a las aulas virtuales (AVUEx) del Campus Virtual de la Universidad
+de Extremadura, con la cuenta del propio alumno. Nada de lo que hagas modifica el campus.
+
+Qué herramienta usar:
+- mis_asignaturas: qué asignaturas cursa y su id, que las demás aceptan para filtrar.
+- proximos_plazos: "¿qué tengo esta semana?": entregas, aperturas y cierres de
+  actividades y eventos del calendario, por fecha.
+- estado_entregas: qué tareas faltan por entregar y la nota y comentarios de las entregadas.
+- novedades: qué ha cambiado en las asignaturas (por defecto, desde la última consulta).
+- notificaciones: avisos del campus (foros, calificaciones...).
+- quien_soy: con qué cuenta está conectado el servidor.
+
+Las fechas están en hora de España (ISO 8601). Da al alumno los enlaces (url) cuando le
+ayuden a llegar a la actividad. Si una herramienta dice que no hay sesión o que ha
+caducado, pídele que ejecute `cvuex-mcp login` en una terminal.
+"""
+
+mcp = MCPServer(name="cvuex", instructions=INSTRUCTIONS, lifespan=lifespan)
 
 READ_ONLY = ToolAnnotations(read_only_hint=True, open_world_hint=True)
 
@@ -126,12 +143,13 @@ async def upcoming_deadlines(
         int | None, Field(description="Id (de mis_asignaturas) para ver solo esa asignatura.")
     ] = None,
 ) -> ListaPlazos:
-    """Lista lo que el alumno tiene pendiente con fecha: entregas de tareas, cierres de
-    cuestionarios y otras actividades, ordenado por fecha.
+    """Lista lo que tiene el alumno en el calendario, ordenado por fecha: entregas de
+    tareas, cierres y aperturas de actividades, eventos que añade el profesor (exámenes,
+    sesiones...) y eventos personales.
 
-    Solo aparece lo que aún requiere una acción del alumno (una tarea ya entregada no
-    sale). Incluye lo vencido en los últimos 30 días que sigue pendiente, marcado con
-    vencido = true.
+    requiere_accion = true marca lo que Moodle espera que el alumno haga (entregar,
+    responder...); desaparece cuando ya está hecho. Esos pendientes se incluyen aunque
+    hayan vencido en los últimos 30 días (vencido = true). El resto es informativo.
     """
     async with campus_session(ctx) as campus:
         return await campus.deadlines(dias, asignatura_id)
@@ -197,3 +215,21 @@ async def changes(
     if desde_horas is None and asignatura_id is None:
         state.saved.set(LAST_CHANGES_CHECK, now)
     return result
+
+
+@mcp.tool(name="notificaciones", annotations=READ_ONLY)
+async def notifications(
+    ctx: Context,
+    solo_no_leidas: Annotated[
+        bool, Field(description="false para incluir también las ya leídas.")
+    ] = True,
+    limite: Annotated[int, Field(ge=1, le=50, description="Cuántas mostrar como mucho.")] = 20,
+) -> ListaNotificaciones:
+    """Muestra las notificaciones del campus (avisos de foros, calificaciones, entregas...),
+    de la más reciente a la más antigua.
+
+    Consultarlas no las marca como leídas. La mensajería entre usuarios está
+    desactivada en el campus, así que no hay mensajes que consultar.
+    """
+    async with campus_session(ctx) as campus:
+        return await campus.notifications(unread_only=solo_no_leidas, limit=limite)

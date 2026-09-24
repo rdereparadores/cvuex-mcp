@@ -114,3 +114,41 @@ CHANGE_DESCRIPTIONS = {
 def describe_change(name: str, item_count: int = 0) -> str:
     description = CHANGE_DESCRIPTIONS.get(name.removeprefix("user"), name)
     return f"{description} ({item_count})" if item_count else description
+
+
+def component_origin(component: str | None) -> str:
+    """Where a notification comes from: ``mod_forum`` → ``foro``; core ones → ``campus``."""
+    if component and component.startswith("mod_"):
+        return module_type(component.removeprefix("mod_"))
+    return "campus"
+
+
+# Calendar events not tied to an activity, by Moodle event type.
+EVENT_KINDS = {
+    "course": "evento de la asignatura",
+    "group": "evento de grupo",
+    "user": "evento personal",
+    "site": "evento del campus",
+    "category": "evento de la titulación",
+}
+
+
+def event_kind(event_type: str, module_name: str | None) -> str:
+    """``("due", "assign")`` → ``tarea``; ``("course", None)`` → ``evento de la asignatura``."""
+    if module_name:
+        return module_type(module_name)
+    return EVENT_KINDS.get(event_type, "evento")
+
+
+def calendar_day_url(site: Site, course_id: int, timestamp: int, event_id: int) -> str:
+    """Link to an event in the day view of Moodle's calendar."""
+    query = f"view=day&course={course_id}&time={timestamp}"
+    return f"{site.url}/calendar/view.php?{query}#event_{event_id}"
+
+
+def short_text(html: str | None, max_chars: int = 300) -> str | None:
+    """HTML → plain text cut to ``max_chars``, or None when there is no text."""
+    text = html_to_text(html)
+    if len(text) > max_chars:
+        text = text[:max_chars].rstrip() + "…"
+    return text or None

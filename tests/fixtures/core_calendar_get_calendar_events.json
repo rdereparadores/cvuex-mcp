@@ -1,0 +1,45 @@
+{
+  "events": [
+    {
+      "id": 252162,
+      "name": "Selección tipo de evaluación GLOBAL: abren",
+      "description": "<div class=\"no-overflow\"><p><i>Seleccionar solo en caso de <strong>no</strong> querer evaluación contínua. Quienes seleccionen esta opción tendrán que presentarse a los correspondientes exámenes finales, tanto teóricos como prácticos.</i></p></div>",
+      "format": 1,
+      "courseid": 32254,
+      "categoryid": null,
+      "groupid": null,
+      "userid": 1001,
+      "repeatid": null,
+      "modulename": "choice",
+      "instance": 17431,
+      "eventtype": "open",
+      "timestart": 1790546400,
+      "timeduration": 0,
+      "visible": 1,
+      "sequence": 1,
+      "timemodified": 1789381441,
+      "subscriptionid": null
+    },
+    {
+      "id": 252163,
+      "name": "Selección tipo de evaluación GLOBAL: cierran",
+      "description": "<div class=\"no-overflow\"><p><i>Seleccionar solo en caso de <strong>no</strong> querer evaluación contínua. Quienes seleccionen esta opción tendrán que presentarse a los correspondientes exámenes finales, tanto teóricos como prácticos.</i></p></div>",
+      "format": 1,
+      "courseid": 32254,
+      "categoryid": null,
+      "groupid": null,
+      "userid": 1001,
+      "repeatid": null,
+      "modulename": "choice",
+      "instance": 17431,
+      "eventtype": "close",
+      "timestart": 1795820400,
+      "timeduration": 0,
+      "visible": 1,
+      "sequence": 1,
+      "timemodified": 1789381441,
+      "subscriptionid": null
+    }
+  ],
+  "warnings": []
+}

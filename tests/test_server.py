@@ -105,7 +105,11 @@ BY_TIMESORT = "core_calendar_get_action_events_by_timesort"
 
 async def test_proximos_plazos(store, fake_moodle):
     store.save("avuex", Credentials("tok"))
-    fake_moodle.answers[BY_TIMESORT] = load_fixture(f"{BY_TIMESORT}__sintetico")
+    fake_moodle.answers |= {
+        BY_TIMESORT: load_fixture(f"{BY_TIMESORT}__sintetico"),
+        "core_calendar_get_calendar_events": {"events": [], "warnings": []},
+        COURSES: load_fixture(COURSES),
+    }
 
     result = await call("proximos_plazos", {"dias": 7})
 
@@ -177,3 +181,31 @@ async def test_novedades_remembers_the_last_full_check(store, fake_moodle):
     fake_moodle.calls.clear()
     await call("novedades")
     assert {c["since"] for c in fake_moodle.calls if c["wsfunction"] == UPDATES} == {"1000"}
+
+
+NOTIFICATIONS = "message_popup_get_popup_notifications"
+
+
+async def test_notificaciones(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers[NOTIFICATIONS] = load_fixture(f"{NOTIFICATIONS}__sintetico")
+
+    result = await call("notificaciones")
+
+    assert result.structured_content["sin_leer"] == 2
+    assert len(result.structured_content["notificaciones"]) == 2
+
+
+async def test_notificaciones_rejects_invalid_limit(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    result = await call("notificaciones", {"limite": 0})
+    assert result.is_error
+    assert fake_moodle.calls == []
+
+
+async def test_instructions_mention_every_tool():
+    async with Client(server.mcp) as client:
+        tools = [tool.name for tool in (await client.list_tools()).tools]
+    assert len(tools) == 6
+    for tool in tools:
+        assert tool in server.INSTRUCTIONS, tool

@@ -72,8 +72,21 @@ NOW = 1790265600  # 2026-09-24 18:00, Spanish time
 DAY = 24 * 60 * 60
 
 
-def campus_with_events(answer=EVENTS, *, clock=lambda: NOW) -> tuple[Campus, FakeMoodle]:
-    fake = FakeMoodle({BY_TIMESORT: answer, BY_COURSE: answer})
+CALENDAR = "core_calendar_get_calendar_events"
+NO_CALENDAR_EVENTS = {"events": [], "warnings": []}
+
+
+def campus_with_events(
+    answer=EVENTS, *, calendar=NO_CALENDAR_EVENTS, courses=None, clock=lambda: NOW
+) -> tuple[Campus, FakeMoodle]:
+    fake = FakeMoodle(
+        {
+            BY_TIMESORT: answer,
+            BY_COURSE: answer,
+            CALENDAR: calendar,
+            COURSES: courses or load_fixture(COURSES),
+        }
+    )
     return Campus(fake.client(), clock=clock), fake
 
 
@@ -91,13 +104,15 @@ async def test_deadlines():
         "actividad": "Práctica 1: regresión lineal",
         "tipo": "tarea",
         "evento": "Práctica 1: regresión lineal está en fecha de entrega",
+        "descripcion": "Entrega el cuaderno .ipynb con los resultados.",
+        "requiere_accion": True,
         "accion": "Añadir entrega",
         "vencido": False,
         "url": "https://campusvirtual.unex.es/zonauex/avuex/mod/assign/view.php?id=1830001",
     }
     assert (quiz.tipo, quiz.accion) == ("cuestionario", "Intente resolver el cuestionario ahora")
 
-    [call] = fake.calls
+    call = fake.calls[0]
     assert call["wsfunction"] == BY_TIMESORT
     assert int(call["timesortfrom"]) == NOW - 30 * DAY
     assert int(call["timesortto"]) == NOW + 14 * DAY
@@ -124,9 +139,10 @@ async def test_deadlines_reuse_cache_within_the_same_minute():
     now = [NOW + 5]
     campus, fake = campus_with_events(clock=lambda: now[0])
     await campus.deadlines(days=14)
+    requests_first_time = len(fake.calls)
     now[0] += 30
     await campus.deadlines(days=14)
-    assert len(fake.calls) == 1
+    assert len(fake.calls) == requests_first_time
 
 
 async def test_no_deadlines():
@@ -304,3 +320,139 @@ async def test_changes_of_one_course():
     await campus.changes(since=NOW, course_id=32337)
     assert fake.calls[0]["classification"] == "all"
     assert [call["courseid"] for call in fake.calls if call["wsfunction"] == UPDATES] == ["32337"]
+
+
+NOTIFICATIONS = "message_popup_get_popup_notifications"
+
+
+def campus_with_notifications(answer=None) -> tuple[Campus, FakeMoodle]:
+    answer = answer or load_fixture(f"{NOTIFICATIONS}__sintetico")
+    fake = FakeMoodle({NOTIFICATIONS: answer})
+    return Campus(fake.client()), fake
+
+
+async def test_unread_notifications():
+    campus, fake = campus_with_notifications()
+    result = await campus.notifications(unread_only=True, limit=20)
+
+    assert result.sin_leer == 2
+    forum, grade = result.notificaciones
+    assert forum.model_dump() == {
+        "asunto": "COMPUTACIÓN GRÁFICA: Cambio de aula para la práctica 2",
+        "resumen": "Persona 2 ha publicado en Avisos: Cambio de aula para la práctica 2",
+        "origen": "foro",
+        "fecha": "2026-09-24T16:00+02:00",
+        "leida": False,
+        "url": "https://campusvirtual.unex.es/zonauex/avuex/mod/forum/discuss.php?d=64301#p120001",
+    }
+    assert grade.origen == "tarea"
+    [call] = fake.calls
+    assert (call["useridto"], call["newestfirst"], call["limit"]) == ("0", "1", "50")
+
+
+async def test_all_notifications_up_to_the_limit():
+    campus, fake = campus_with_notifications()
+    result = await campus.notifications(unread_only=False, limit=2)
+    assert [n.leida for n in result.notificaciones] == [False, False]
+    assert fake.calls[0]["limit"] == "2"
+
+
+async def test_long_notification_summaries_are_cut():
+    answer = load_fixture(f"{NOTIFICATIONS}__sintetico")
+    answer["notifications"][0]["smallmessage"] = "palabra " * 100
+    campus, _ = campus_with_notifications(answer)
+    summary = (await campus.notifications(unread_only=True, limit=1)).notificaciones[0].resumen
+    assert len(summary) <= 301
+    assert summary.endswith("…")
+
+
+async def test_no_notifications():
+    """Real answer: no notifications yet."""
+    campus, _ = campus_with_notifications(load_fixture(f"{NOTIFICATIONS}__vacio"))
+    result = await campus.notifications(unread_only=True, limit=20)
+    assert (result.sin_leer, result.notificaciones) == (0, [])
+
+
+SRP_COURSES = {
+    "courses": [
+        {
+            "id": 32254,
+            "fullname": "Sistemas de Recomendación y Predicción",
+            "coursecategory": "Máster Universitario en Ingeniería Informática",
+            "hasprogress": False,
+            "progress": 0,
+        }
+    ]
+}
+
+
+async def test_calendar_events_are_added_without_duplicates():
+    """Real data: a choice opens on 28/09 (no action) and closes on 28/11 (pending)."""
+    campus, _ = campus_with_events(
+        load_fixture(BY_COURSE), calendar=load_fixture(CALENDAR), courses=SRP_COURSES
+    )
+    opening, closing = (await campus.deadlines(days=90, course_id=32254)).plazos
+
+    assert opening.model_dump() == {
+        "fecha": "2026-09-28T00:00+02:00",
+        "asignatura": "Sistemas de Recomendación y Predicción",
+        "asignatura_id": 32254,
+        "actividad": "Selección tipo de evaluación GLOBAL: abren",
+        "tipo": "consulta",
+        "evento": "Selección tipo de evaluación GLOBAL: abren",
+        "descripcion": (
+            "Seleccionar solo en caso de no querer evaluación contínua. Quienes seleccionen "
+            "esta opción tendrán que presentarse a los correspondientes exámenes finales, "
+            "tanto teóricos como prácticos."
+        ),
+        "requiere_accion": False,
+        "accion": None,
+        "vencido": False,
+        "url": "https://campusvirtual.unex.es/zonauex/avuex/calendar/view.php"
+        "?view=day&course=32254&time=1790546400#event_252162",
+    }
+    assert (closing.evento, closing.requiere_accion) == (
+        "Selección tipo de evaluación GLOBAL: cierran",
+        True,
+    )
+
+
+async def test_calendar_request_for_all_courses_includes_personal_events():
+    campus, fake = campus_with_events()
+    await campus.deadlines(days=14)
+    [call] = [call for call in fake.calls if call["wsfunction"] == CALENDAR]
+    assert [call[f"events[courseids][{i}]"] for i in range(3)] == ["32338", "32337", "32327"]
+    assert (call["options[timestart]"], call["options[timeend]"]) == (str(NOW), str(NOW + 14 * DAY))
+    assert (call["options[userevents]"], call["options[siteevents]"]) == ("1", "1")
+
+
+async def test_calendar_request_for_one_course():
+    campus, fake = campus_with_events()
+    await campus.deadlines(days=14, course_id=32254)
+    [call] = [call for call in fake.calls if call["wsfunction"] == CALENDAR]
+    assert call["events[courseids][0]"] == "32254"
+    assert (call["options[userevents]"], call["options[siteevents]"]) == ("0", "0")
+
+
+async def test_personal_calendar_event():
+    personal = {
+        "id": 5,
+        "name": "Tutoría con el profesor",
+        "description": "",
+        "courseid": 0,
+        "eventtype": "user",
+        "modulename": None,
+        "timestart": NOW + DAY,
+        "timeduration": 1800,
+    }
+    campus, _ = campus_with_events(calendar={"events": [personal], "warnings": []})
+    plazos = (await campus.deadlines(days=14)).plazos
+    [plazo] = [p for p in plazos if p.evento == "Tutoría con el profesor"]
+
+    assert (plazo.tipo, plazo.asignatura, plazo.asignatura_id, plazo.descripcion) == (
+        "evento personal",
+        None,
+        None,
+        None,
+    )
+    assert "course=1&" in plazo.url

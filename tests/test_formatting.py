@@ -1,11 +1,14 @@
 import pytest
 
 from cvuex_mcp.formatting import (
+    component_origin,
     course_url,
     describe_change,
+    event_kind,
     html_to_text,
     iso_datetime,
     module_url,
+    short_text,
 )
 from cvuex_mcp.sites import AVUEX
 
@@ -54,3 +57,29 @@ def test_campus_urls():
 )
 def test_describe_change(name, count, expected):
     assert describe_change(name, count) == expected
+
+
+@pytest.mark.parametrize(
+    ("component", "expected"),
+    [("mod_forum", "foro"), ("mod_assign", "tarea"), ("moodle", "campus"), (None, "campus")],
+)
+def test_component_origin(component, expected):
+    assert component_origin(component) == expected
+
+
+@pytest.mark.parametrize(
+    ("event_type", "module_name", "expected"),
+    [
+        ("open", "choice", "consulta"),
+        ("course", None, "evento de la asignatura"),
+        ("x", None, "evento"),
+    ],
+)
+def test_event_kind(event_type, module_name, expected):
+    assert event_kind(event_type, module_name) == expected
+
+
+def test_short_text():
+    assert short_text("<p>hola</p>") == "hola"
+    assert short_text("<p></p>") is None
+    assert short_text("a" * 10, max_chars=4) == "aaaa…"

@@ -23,13 +23,20 @@ class ListaAsignaturas(BaseModel):
 
 
 class Plazo(BaseModel):
-    fecha: str = Field(description="Fecha límite (ISO 8601, hora de España).")
+    fecha: str = Field(description="Cuándo es (ISO 8601, hora de España).")
     asignatura: str | None
     asignatura_id: int | None
     actividad: str
-    tipo: str = Field(description="Tipo de actividad: tarea, cuestionario, consulta...")
+    tipo: str = Field(
+        description="tarea, cuestionario, consulta..., o evento de la asignatura, personal..."
+    )
     evento: str = Field(
         description="Qué ocurre en esa fecha, p. ej. 'Práctica 1 está en fecha de entrega'."
+    )
+    descripcion: str | None
+    requiere_accion: bool = Field(
+        description="Moodle espera que el alumno haga algo (entregar, responder...). Si es false, "
+        "es informativo: una apertura, un examen creado por el profesor, algo ya hecho..."
     )
     accion: str | None = Field(
         description="Lo que el alumno puede hacer ahora, si puede hacer algo."
@@ -91,3 +98,17 @@ class NovedadesAsignatura(BaseModel):
 class ListaNovedades(BaseModel):
     desde: str = Field(description="Desde cuándo se buscan cambios (ISO 8601).")
     asignaturas: list[NovedadesAsignatura] = Field(description="Solo las que tienen cambios.")
+
+
+class Notificacion(BaseModel):
+    asunto: str
+    resumen: str
+    origen: str = Field(description="De dónde viene: foro, tarea, cuestionario, campus...")
+    fecha: str | None = Field(description="Cuándo llegó (ISO 8601, hora de España).")
+    leida: bool
+    url: str | None
+
+
+class ListaNotificaciones(BaseModel):
+    sin_leer: int = Field(description="Total de notificaciones sin leer en el campus.")
+    notificaciones: list[Notificacion] = Field(description="De la más reciente a la más antigua.")
