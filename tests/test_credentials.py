@@ -3,12 +3,8 @@ import stat
 
 import pytest
 
-from cvuex_mcp.credentials import (
-    HOME_ENV_VAR,
-    Credentials,
-    CredentialStore,
-    default_credentials_path,
-)
+from cvuex_mcp.credentials import Credentials, CredentialStore, default_credentials_path
+from cvuex_mcp.storage import HOME_ENV_VAR
 
 
 @pytest.fixture

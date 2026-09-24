@@ -1,0 +1,68 @@
+[
+  {
+    "id": 359350,
+    "name": "General",
+    "visible": 1,
+    "summary": "<p></p>\r\n<table style=\"height: 25px; width: 90%;\" border=\"0\" align=\"center\">\r\n<tbody>\r\n<tr>\r\n<td>\r\n<p style=\"text-align: center;\"><span style=\"font-size: large;\" data-mce-mark=\"1\"><strong><span class=\"\" style=\"color: #000000; font-size: x-large;\">APRENDIZAJE AUTOMÁTICO Y APRENDIZAJE PROFUNDO</span><…",
+    "summaryformat": 1,
+    "section": 0,
+    "hiddenbynumsections": 0,
+    "uservisible": true,
+    "component": null,
+    "itemid": null,
+    "modules": [
+      {
+        "id": 1826525,
+        "url": "https://campusvirtual.unex.es/zonauex/avuex/mod/forum/view.php?id=1826525",
+        "name": "Foro general de la asignatura",
+        "instance": 72401,
+        "contextid": 2819997,
+        "visible": 1,
+        "uservisible": true,
+        "visibleoncoursepage": 1,
+        "modicon": "https://campusvirtual.unex.es/zonauex/avuex/theme/image.php/moove/forum/1790138734/monologo?filtericon=1",
+        "modname": "forum",
+        "purpose": "collaboration",
+        "branded": false,
+        "modplural": "Foros",
+        "indent": 0,
+        "onclick": "",
+        "afterlink": null,
+        "activitybadge": [],
+        "customdata": "{\"trackingtype\":\"1\"}",
+        "noviewlink": false,
+        "candisplay": true,
+        "completion": 0,
+        "downloadcontent": 1,
+        "dates": [],
+        "groupmode": 0
+      }
+    ]
+  },
+  {
+    "id": 359547,
+    "name": "Aprendizaje Automático",
+    "visible": 1,
+    "summary": "",
+    "summaryformat": 1,
+    "section": 1,
+    "hiddenbynumsections": 0,
+    "uservisible": true,
+    "component": null,
+    "itemid": null,
+    "modules": []
+  },
+  {
+    "id": 359548,
+    "name": "Aprendizaje Profundo",
+    "visible": 1,
+    "summary": "",
+    "summaryformat": 1,
+    "section": 2,
+    "hiddenbynumsections": 0,
+    "uservisible": true,
+    "component": null,
+    "itemid": null,
+    "modules": []
+  }
+]

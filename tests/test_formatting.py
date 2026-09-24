@@ -1,6 +1,12 @@
 import pytest
 
-from cvuex_mcp.formatting import course_url, html_to_text, iso_datetime, module_url
+from cvuex_mcp.formatting import (
+    course_url,
+    describe_change,
+    html_to_text,
+    iso_datetime,
+    module_url,
+)
 from cvuex_mcp.sites import AVUEX
 
 
@@ -36,3 +42,15 @@ def test_html_to_text(html, expected):
 def test_campus_urls():
     assert course_url(AVUEX, 32254) == f"{AVUEX.url}/course/view.php?id=32254"
     assert module_url(AVUEX, "forum", 1823815) == f"{AVUEX.url}/mod/forum/view.php?id=1823815"
+
+
+@pytest.mark.parametrize(
+    ("name", "count", "expected"),
+    [
+        ("discussions", 2, "debates nuevos o con respuestas nuevas (2)"),
+        ("usergrades", 0, "calificaciones nuevas o modificadas"),
+        ("desconocido", 0, "desconocido"),
+    ],
+)
+def test_describe_change(name, count, expected):
+    assert describe_change(name, count) == expected

@@ -75,3 +75,8 @@ def test_committed_fixtures_contain_no_secrets(fixture):
 
     data = json.loads(fixture.read_text(encoding="utf-8"))
     assert all(value == "<secreto>" for value in secret_values(data))
+
+
+def test_emails_inside_texts_are_replaced():
+    data = {"summary": "<p>Profesora: Ana, ana.perez@unex.es</p>"}
+    assert anonymize(data) == {"summary": "<p>Profesora: Ana, persona@example.com</p>"}

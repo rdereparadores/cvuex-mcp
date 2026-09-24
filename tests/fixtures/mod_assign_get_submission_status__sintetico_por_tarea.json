@@ -1,0 +1,71 @@
+{
+  "7101": {
+    "lastattempt": {
+      "submission": {
+        "id": 55101, "userid": 1001, "attemptnumber": 0, "timecreated": 1790200000,
+        "timemodified": 1790200000, "timestarted": null, "status": "draft", "groupid": 0,
+        "assignment": 7101, "latest": 1,
+        "plugins": [{"type": "file", "name": "Archivos enviados", "fileareas": [{"area": "submission_files", "files": []}]}],
+        "gradingstatus": "notgraded"
+      },
+      "submissiongroupmemberswhoneedtosubmit": [],
+      "submissionsenabled": true, "locked": false, "graded": false, "canedit": true,
+      "caneditowner": true, "cansubmit": true, "extensionduedate": null, "timelimit": 0,
+      "blindmarking": false, "gradingstatus": "notgraded", "usergroups": []
+    },
+    "warnings": []
+  },
+  "7102": {
+    "lastattempt": {
+      "submission": {
+        "id": 55102, "userid": 1001, "attemptnumber": 0, "timecreated": 1789950000,
+        "timemodified": 1789990000, "timestarted": null, "status": "submitted", "groupid": 0,
+        "assignment": 7102, "latest": 1, "plugins": [], "gradingstatus": "graded"
+      },
+      "submissiongroupmemberswhoneedtosubmit": [],
+      "submissionsenabled": true, "locked": false, "graded": true, "canedit": false,
+      "caneditowner": false, "cansubmit": false, "extensionduedate": null, "timelimit": 0,
+      "blindmarking": false, "gradingstatus": "graded", "usergroups": []
+    },
+    "feedback": {
+      "grade": {
+        "id": 66102, "assignment": 7102, "userid": 1001, "attemptnumber": 0,
+        "timecreated": 1790100000, "timemodified": 1790100000, "grader": -1, "grade": "8.50000"
+      },
+      "gradefordisplay": "8,50&nbsp;/&nbsp;10,00",
+      "gradeddate": 1790100000,
+      "plugins": [
+        {
+          "type": "comments", "name": "Comentarios de retroalimentación",
+          "editorfields": [{"name": "comments", "description": "Comentarios de retroalimentación", "text": "<p>Buen trabajo. Revisa la <strong>normalización</strong> de los datos.</p>", "format": 1}]
+        },
+        {"type": "file", "name": "Archivos de retroalimentación", "fileareas": [{"area": "feedback_files", "files": []}]}
+      ]
+    },
+    "warnings": []
+  },
+  "7103": {
+    "lastattempt": {
+      "teamsubmission": {
+        "id": 55103, "userid": 0, "attemptnumber": 0, "timecreated": 1790000000,
+        "timemodified": 1790000000, "timestarted": null, "status": "new", "groupid": 501,
+        "assignment": 7103, "latest": 1, "plugins": [], "gradingstatus": "notgraded"
+      },
+      "submissiongroup": 501,
+      "submissiongroupmemberswhoneedtosubmit": [],
+      "submissionsenabled": true, "locked": false, "graded": false, "canedit": true,
+      "caneditowner": true, "cansubmit": false, "extensionduedate": null, "timelimit": 0,
+      "blindmarking": false, "gradingstatus": "notgraded", "usergroups": [501]
+    },
+    "warnings": []
+  },
+  "7104": {
+    "lastattempt": {
+      "submissiongroupmemberswhoneedtosubmit": [],
+      "submissionsenabled": false, "locked": false, "graded": false, "canedit": false,
+      "caneditowner": false, "cansubmit": false, "extensionduedate": null, "timelimit": 0,
+      "blindmarking": false, "gradingstatus": "notgraded", "usergroups": []
+    },
+    "warnings": []
+  }
+}

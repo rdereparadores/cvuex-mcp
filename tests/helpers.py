@@ -1,6 +1,7 @@
 """Shared test helpers: fixtures and a fake Moodle server."""
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import Any
 from urllib.parse import parse_qsl
@@ -19,9 +20,13 @@ def load_fixture(name: str) -> Any:
 
 
 class FakeMoodle:
-    """Answers each web service function with a canned response and records the calls."""
+    """Answers each web service function with a canned response and records the calls.
 
-    def __init__(self, answers: dict[str, Any]) -> None:
+    An answer can also be a function of the request's form fields, to answer
+    differently depending on the parameters.
+    """
+
+    def __init__(self, answers: dict[str, Any | Callable[[dict[str, str]], Any]]) -> None:
         self.answers = answers
         self.calls: list[dict[str, str]] = []
         """Form fields of every request received, including ``wsfunction`` and ``wstoken``."""
@@ -40,4 +45,5 @@ class FakeMoodle:
     def _handle(self, request: httpx.Request) -> httpx.Response:
         form = dict(parse_qsl(request.content.decode()))
         self.calls.append(form)
-        return httpx.Response(200, json=self.answers[form["wsfunction"]])
+        answer = self.answers[form["wsfunction"]]
+        return httpx.Response(200, json=answer(form) if callable(answer) else answer)

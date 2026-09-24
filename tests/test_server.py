@@ -5,7 +5,10 @@ from helpers import FakeMoodle, load_fixture
 from mcp.client import Client
 
 from cvuex_mcp import server
-from cvuex_mcp.credentials import HOME_ENV_VAR, Credentials, CredentialStore
+from cvuex_mcp.credentials import Credentials, CredentialStore
+from cvuex_mcp.rate_limit import RateLimiter
+from cvuex_mcp.state import PersistentState
+from cvuex_mcp.storage import HOME_ENV_VAR
 
 SITE_INFO = "core_webservice_get_site_info"
 
@@ -20,6 +23,7 @@ def store(tmp_path, monkeypatch) -> CredentialStore:
 def fake_moodle(monkeypatch) -> FakeMoodle:
     fake = FakeMoodle({SITE_INFO: load_fixture(SITE_INFO)})
     monkeypatch.setattr(server, "new_http_client", fake.http_client)
+    monkeypatch.setattr(server, "RateLimiter", lambda: RateLimiter(min_interval=0))
     return fake
 
 
@@ -94,3 +98,82 @@ async def test_mis_asignaturas_rejects_unknown_state(store, fake_moodle):
     result = await call("mis_asignaturas", {"estado": "inventado"})
     assert result.is_error
     assert fake_moodle.calls == []
+
+
+BY_TIMESORT = "core_calendar_get_action_events_by_timesort"
+
+
+async def test_proximos_plazos(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers[BY_TIMESORT] = load_fixture(f"{BY_TIMESORT}__sintetico")
+
+    result = await call("proximos_plazos", {"dias": 7})
+
+    assert not result.is_error
+    deadlines = result.structured_content["plazos"]
+    assert [d["actividad"] for d in deadlines] == [
+        "Práctica 0",
+        "Práctica 1: regresión lineal",
+        "Cuestionario tema 1",
+    ]
+
+
+@pytest.mark.parametrize("dias", [0, 91])
+async def test_proximos_plazos_rejects_out_of_range_days(store, fake_moodle, dias):
+    store.save("avuex", Credentials("tok"))
+    result = await call("proximos_plazos", {"dias": dias})
+    assert result.is_error
+    assert fake_moodle.calls == []
+
+
+ASSIGNMENTS = "mod_assign_get_assignments"
+STATUS = "mod_assign_get_submission_status"
+
+
+async def test_estado_entregas(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    statuses = load_fixture(f"{STATUS}__sintetico_por_tarea")
+    fake_moodle.answers |= {
+        ASSIGNMENTS: load_fixture(f"{ASSIGNMENTS}__sintetico"),
+        STATUS: lambda form: statuses[form["assignid"]],
+    }
+
+    result = await call("estado_entregas", {"asignatura_id": 32338, "solo_pendientes": False})
+
+    assert not result.is_error
+    assert len(result.structured_content["entregas"]) == 4  # the fake ignores the course filter
+    assert fake_moodle.calls[0]["courseids[0]"] == "32338"
+
+
+UPDATES = "core_course_get_updates_since"
+WEEK = 7 * 24 * 3600
+
+
+def test_changes_since(tmp_path):
+    saved = PersistentState(tmp_path / "state.json")
+    assert server.changes_since(saved, None, now=10 * WEEK) == 9 * WEEK  # first time: a week
+    saved.set(server.LAST_CHANGES_CHECK, 123)
+    assert server.changes_since(saved, None, now=10 * WEEK) == 123
+    assert server.changes_since(saved, 2, now=10 * WEEK) == 10 * WEEK - 2 * 3600
+
+
+async def test_novedades_remembers_the_last_full_check(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers |= {
+        COURSES: load_fixture(COURSES),
+        UPDATES: {"instances": [], "warnings": []},
+    }
+    saved = PersistentState()
+
+    await call("novedades")
+    first_mark = saved.get(server.LAST_CHANGES_CHECK)
+    assert first_mark is not None
+
+    saved.set(server.LAST_CHANGES_CHECK, 1000)
+    await call("novedades", {"desde_horas": 24})
+    await call("novedades", {"asignatura_id": 32338})
+    assert saved.get(server.LAST_CHANGES_CHECK) == 1000  # partial checks don't move it
+
+    fake_moodle.calls.clear()
+    await call("novedades")
+    assert {c["since"] for c in fake_moodle.calls if c["wsfunction"] == UPDATES} == {"1000"}

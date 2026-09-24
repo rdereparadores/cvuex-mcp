@@ -42,6 +42,8 @@ EMAIL_KEYS = {"email"}
 PERSON_MARKERS = PERSON_NAME_KEYS | EMAIL_KEYS | {"profileimageurl", "userpictureurl"}
 USER_ID_KEYS = {"userid", "useridfrom", "useridto", "authorid"}
 FREE_TEXT_KEYS = {"text", "smallmessage", "fullmessage", "fullmessagehtml", "fullmessagetext"}
+# Emails also appear inside free texts, e.g. teachers' contact in a section summary.
+EMAIL_PATTERN = re.compile(r"[\w.+-]+@[\w-]+(\.[\w-]+)+")
 
 
 # --- explorar ------------------------------------------------------------------
@@ -162,6 +164,7 @@ class Anonymizer:
         # Longest first, so "Ana María" is replaced before "Ana".
         for real in sorted(self._people, key=len, reverse=True):
             text = text.replace(real, self._people[real])
+        text = EMAIL_PATTERN.sub("persona@example.com", text)
         return text if len(text) <= self.max_text else text[: self.max_text] + "…"
 
 

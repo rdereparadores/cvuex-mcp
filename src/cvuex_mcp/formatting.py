@@ -56,3 +56,61 @@ def course_url(site: Site, course_id: int) -> str:
 def module_url(site: Site, module_name: str, course_module_id: int) -> str:
     """Link to an activity, e.g. ``module_url(site, "assign", 123)``."""
     return f"{site.url}/mod/{module_name}/view.php?id={course_module_id}"
+
+
+# Moodle module names → how the Spanish UI calls them.
+MODULE_TYPES = {
+    "assign": "tarea",
+    "quiz": "cuestionario",
+    "forum": "foro",
+    "choice": "consulta",
+    "choicegroup": "elección de grupo",
+    "workshop": "taller",
+    "lesson": "lección",
+    "feedback": "encuesta",
+    "data": "base de datos",
+    "glossary": "glosario",
+    "wiki": "wiki",
+    "scorm": "paquete SCORM",
+    "h5pactivity": "H5P",
+    "bigbluebuttonbn": "videoconferencia",
+    "lti": "herramienta externa",
+    "scheduler": "cita previa",
+    "reservation": "reserva",
+}
+
+
+def module_type(module_name: str | None) -> str:
+    return MODULE_TYPES.get(module_name or "", module_name or "otro")
+
+
+# What changed in an activity, as reported by core_course_get_updates_since (Moodle 5.2).
+# Names with a "user" prefix (usergrades...) mean the same as without it.
+CHANGE_DESCRIPTIONS = {
+    "configuration": "cambios en la actividad o su descripción",
+    "contentfiles": "ficheros nuevos o modificados",
+    "introfiles": "ficheros de la descripción modificados",
+    "completion": "cambio en el estado de finalización",
+    "gradeitems": "cambios en la calificación",
+    "outcomes": "cambios en los resultados de aprendizaje",
+    "comments": "comentarios nuevos",
+    "ratings": "valoraciones nuevas",
+    "discussions": "debates nuevos o con respuestas nuevas",
+    "submissions": "cambios en las entregas",
+    "grades": "calificaciones nuevas o modificadas",
+    "attempts": "intentos nuevos o modificados",
+    "questions": "preguntas modificadas",
+    "answers": "respuestas nuevas",
+    "entries": "entradas nuevas o modificadas",
+    "pages": "páginas nuevas o modificadas",
+    "tracks": "progreso registrado",
+    "assessments": "evaluaciones nuevas",
+    "assessmentgrades": "notas de evaluaciones nuevas",
+    "attemptsfinished": "respuestas enviadas",
+    "attemptsunfinished": "respuestas sin terminar",
+}
+
+
+def describe_change(name: str, item_count: int = 0) -> str:
+    description = CHANGE_DESCRIPTIONS.get(name.removeprefix("user"), name)
+    return f"{description} ({item_count})" if item_count else description
