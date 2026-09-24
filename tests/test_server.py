@@ -4,11 +4,12 @@ import pytest
 from helpers import FakeMoodle, load_fixture
 from mcp.client import Client
 
-from cvuex_mcp import server
+from cvuex_mcp import runtime, server
 from cvuex_mcp.credentials import Credentials, CredentialStore
 from cvuex_mcp.rate_limit import RateLimiter
 from cvuex_mcp.state import PersistentState
 from cvuex_mcp.storage import HOME_ENV_VAR
+from cvuex_mcp.tools import changes as changes_tool
 
 SITE_INFO = "core_webservice_get_site_info"
 
@@ -22,8 +23,8 @@ def store(tmp_path, monkeypatch) -> CredentialStore:
 @pytest.fixture
 def fake_moodle(monkeypatch) -> FakeMoodle:
     fake = FakeMoodle({SITE_INFO: load_fixture(SITE_INFO)})
-    monkeypatch.setattr(server, "new_http_client", fake.http_client)
-    monkeypatch.setattr(server, "RateLimiter", lambda: RateLimiter(min_interval=0))
+    monkeypatch.setattr(runtime, "new_http_client", fake.http_client)
+    monkeypatch.setattr(runtime, "RateLimiter", lambda: RateLimiter(min_interval=0))
     return fake
 
 
@@ -155,10 +156,10 @@ WEEK = 7 * 24 * 3600
 
 def test_changes_since(tmp_path):
     saved = PersistentState(tmp_path / "state.json")
-    assert server.changes_since(saved, None, now=10 * WEEK) == 9 * WEEK  # first time: a week
-    saved.set(server.LAST_CHANGES_CHECK, 123)
-    assert server.changes_since(saved, None, now=10 * WEEK) == 123
-    assert server.changes_since(saved, 2, now=10 * WEEK) == 10 * WEEK - 2 * 3600
+    assert changes_tool.changes_since(saved, None, now=10 * WEEK) == 9 * WEEK  # first time: a week
+    saved.set(changes_tool.LAST_CHANGES_CHECK, 123)
+    assert changes_tool.changes_since(saved, None, now=10 * WEEK) == 123
+    assert changes_tool.changes_since(saved, 2, now=10 * WEEK) == 10 * WEEK - 2 * 3600
 
 
 async def test_novedades_remembers_the_last_full_check(store, fake_moodle):
@@ -170,13 +171,13 @@ async def test_novedades_remembers_the_last_full_check(store, fake_moodle):
     saved = PersistentState()
 
     await call("novedades")
-    first_mark = saved.get(server.LAST_CHANGES_CHECK)
+    first_mark = saved.get(changes_tool.LAST_CHANGES_CHECK)
     assert first_mark is not None
 
-    saved.set(server.LAST_CHANGES_CHECK, 1000)
+    saved.set(changes_tool.LAST_CHANGES_CHECK, 1000)
     await call("novedades", {"desde_horas": 24})
     await call("novedades", {"asignatura_id": 32338})
-    assert saved.get(server.LAST_CHANGES_CHECK) == 1000  # partial checks don't move it
+    assert saved.get(changes_tool.LAST_CHANGES_CHECK) == 1000  # partial checks don't move it
 
     fake_moodle.calls.clear()
     await call("novedades")

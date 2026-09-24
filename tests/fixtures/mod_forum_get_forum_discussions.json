@@ -1,0 +1,41 @@
+{
+  "discussions": [
+    {
+      "id": 64213,
+      "name": "Comienzo de clases de la Asignatura de Aprendizaje Automático y Profundo",
+      "groupid": -1,
+      "timemodified": 1790187375,
+      "usermodified": 1001,
+      "timestart": 0,
+      "timeend": 0,
+      "discussion": 41804,
+      "parent": 0,
+      "userid": 1001,
+      "created": 1790187375,
+      "modified": 1790187375,
+      "mailed": 1,
+      "subject": "Comienzo de clases de la Asignatura de Aprendizaje Automático y Profundo",
+      "message": "<p>La asignatura de Aprendizaje Automático y Profundo(APP) del Máster de Ingeniería Informática tiene un horario síncrono y otro asíncrono, y están al 50% ambas (Máster Semipresencial). De las 2 horas (3 créditos) que aparecen de APP (el martes de 18:30h a 19:30h y el jueves de 17:30h a 18:30h), las que corresponden al horario virtual síncrono (presencial) y que se van a grabar y poner en el campus virtual, son las del martes de 18:30h a 19:30h. Así que nos vemos el próximo martes a las 18:30h en virtual a través de videoconferencia. Os enviaremos un enlace. </p>\r\n<p>Persona 2 y Persona 1</p>",
+      "messageformat": 1,
+      "messagetrust": 0,
+      "attachment": false,
+      "totalscore": 0,
+      "mailnow": 0,
+      "userfullname": "Persona 1",
+      "userinitials": "XX",
+      "usermodifiedfullname": "Persona 1",
+      "usermodifiedinitials": "XX",
+      "userpictureurl": "https://moodle.example/pix/u/f1.png",
+      "usermodifiedpictureurl": "https://moodle.example/pix/u/f1.png",
+      "numreplies": 0,
+      "numunread": 0,
+      "pinned": false,
+      "locked": false,
+      "starred": false,
+      "canreply": false,
+      "canlock": false,
+      "canfavourite": true
+    }
+  ],
+  "warnings": []
+}

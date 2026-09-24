@@ -76,12 +76,23 @@ Estructura de `src/cvuex_mcp/`:
 
 | Módulo | Responsabilidad |
 |---|---|
-| `server.py` | Herramientas MCP y estado compartido |
-| `campus.py` | Única puerta a Moodle: funciones permitidas, caché y conversión de datos |
+| `server.py` | Instrucciones del servidor y registro de las herramientas |
+| `tools/` | Herramientas MCP, un módulo por área. Cada función se llama como la herramienta |
+| `runtime.py` | Estado compartido entre llamadas y acceso de una herramienta al campus (`campus_session`) |
+| `campus/core.py` | `Campus`: única puerta a Moodle (funciones permitidas, caché), alumno y asignaturas |
+| `campus/allowlist.py` | Funciones de Moodle permitidas y su caché: **lo primero que hay que auditar** |
+| `campus/<área>.py` | Consulta y conversión de datos de cada área (plazos, entregas, novedades…) |
 | `models.py` | Lo que devuelven las herramientas |
 | `formatting.py` | Fechas, textos y enlaces |
 | `moodle.py` | Cliente REST de Moodle |
 | `auth.py` · `credentials.py` · `session.py` | Login SSO y sesión guardada |
 | `cache.py` · `rate_limit.py` · `state.py` · `storage.py` | Infraestructura |
+
+**Añadir una herramienta:**
+1. Añadir las funciones de Moodle a `campus/allowlist.py`, tras comprobar en su código que no tienen efectos secundarios.
+2. Escribir la lógica en `campus/<área>.py`.
+3. Definir el modelo de salida en `models.py`.
+4. Crear la herramienta en `tools/<área>.py` con su `register` y añadir el módulo a `tools/__init__.py`.
+5. Mencionarla en `INSTRUCTIONS`; un test lo exige.
 
 **Fixtures de test:** `scripts/moodle_fixtures.py explorar` guarda respuestas reales en `fixtures/raw/` (fuera de git) y `anonimizar` las convierte en fixtures para `tests/fixtures/`. **Revisa siempre a mano el resultado:** el anonimizador no detecta nombres dentro de textos libres.

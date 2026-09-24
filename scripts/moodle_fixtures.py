@@ -36,11 +36,20 @@ CREATES_CREDENTIALS = {
 }
 
 SECRET_KEYS = {"userprivateaccesskey", "token", "privatetoken", "wstoken", "sesskey"}
-PERSON_NAME_KEYS = {"firstname", "lastname", "username", "userfullname", "userfromfullname"}
+PERSON_NAME_KEYS = {
+    "firstname",
+    "lastname",
+    "username",
+    "userfullname",
+    "userfromfullname",
+    "usermodifiedfullname",
+}
 EMAIL_KEYS = {"email"}
 # "fullname" also names courses: it is personal only inside an object describing a person.
 PERSON_MARKERS = PERSON_NAME_KEYS | EMAIL_KEYS | {"profileimageurl", "userpictureurl"}
-USER_ID_KEYS = {"userid", "useridfrom", "useridto", "authorid"}
+USER_ID_KEYS = {"userid", "useridfrom", "useridto", "authorid", "usermodified"}
+# Official identification numbers (e.g. the student's ID); "idnumber" alone is a course code.
+PERSON_ID_NUMBER_KEYS = {"useridnumber"}
 FREE_TEXT_KEYS = {"text", "smallmessage", "fullmessage", "fullmessagehtml", "fullmessagetext"}
 # Emails also appear inside free texts, e.g. teachers' contact in a section summary.
 EMAIL_PATTERN = re.compile(r"[\w.+-]+@[\w-]+(\.[\w-]+)+")
@@ -154,6 +163,10 @@ class Anonymizer:
             return self._user_ids.setdefault(data, next(self._next_user_id))
         if key.endswith(("imageurl", "pictureurl")):
             return "https://moodle.example/pix/u/f1.png"
+        if key.endswith("initials") and isinstance(data, str):
+            return "XX"
+        if key in PERSON_ID_NUMBER_KEYS and data:
+            return "00000000"
         if isinstance(data, str):
             return self._rewrite_text(data, key)
         return data

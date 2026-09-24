@@ -80,3 +80,20 @@ def test_committed_fixtures_contain_no_secrets(fixture):
 def test_emails_inside_texts_are_replaced():
     data = {"summary": "<p>Profesora: Ana, ana.perez@unex.es</p>"}
     assert anonymize(data) == {"summary": "<p>Profesora: Ana, persona@example.com</p>"}
+
+
+def test_forum_author_fields_are_replaced():
+    post = {"userfullname": "Ana Pérez", "userinitials": "AP", "usermodified": 42}
+    result = anonymize({"post": post})["post"]
+    assert result["userfullname"].startswith("Persona")
+    assert result["userinitials"] == "XX"
+    assert result["usermodified"] != 42
+
+
+def test_personal_id_numbers_are_replaced_but_course_codes_kept():
+    data = {"useridnumber": "12345678", "courseidnumber": "24735", "idnumber": "24735"}
+    assert anonymize(data) == {
+        "useridnumber": "00000000",
+        "courseidnumber": "24735",
+        "idnumber": "24735",
+    }

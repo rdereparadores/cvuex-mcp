@@ -14,6 +14,10 @@ from cvuex_mcp.sites import AVUEX
 
 FIXTURES_DIR = Path(__file__).parent / "fixtures"
 
+COURSES = "core_course_get_enrolled_courses_by_timeline_classification"
+NOW = 1790265600  # 2026-09-24 18:00, Spanish time
+DAY = 24 * 60 * 60
+
 
 def load_fixture(name: str) -> Any:
     return json.loads((FIXTURES_DIR / f"{name}.json").read_text(encoding="utf-8"))

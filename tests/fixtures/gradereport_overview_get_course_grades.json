@@ -1,0 +1,30 @@
+{
+  "grades": [
+    {
+      "courseid": 32338,
+      "grade": "-",
+      "rawgrade": null
+    },
+    {
+      "courseid": 32337,
+      "grade": "-",
+      "rawgrade": null
+    },
+    {
+      "courseid": 32327,
+      "grade": "-",
+      "rawgrade": null
+    },
+    {
+      "courseid": 32254,
+      "grade": "-",
+      "rawgrade": null
+    },
+    {
+      "courseid": 32250,
+      "grade": "-",
+      "rawgrade": null
+    }
+  ],
+  "warnings": []
+}
