@@ -13,6 +13,7 @@ Estado: F2 implementada (falta la prueba final en opencode), salvo `simular_nota
 | Herramienta | Para qué |
 |---|---|
 | `mis_asignaturas` | Asignaturas en curso, pasadas o futuras, con su id |
+| `contenido_asignatura` | Temas de una asignatura con sus materiales y actividades, fechas y restricciones |
 | **¿Qué tengo que hacer?** | |
 | `proximos_plazos` | Entregas, aperturas y cierres de actividades y eventos del calendario, por fecha |
 | `estado_entregas` | Tareas sin entregar, en borrador o entregadas, con nota y comentarios del profesor |

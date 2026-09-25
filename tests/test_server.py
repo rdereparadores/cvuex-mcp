@@ -281,6 +281,28 @@ async def test_revisar_cuestionario_refuses_attempts_in_progress(store, fake_moo
     assert "no está terminado" in result.content[0].text
 
 
+async def test_contenido_asignatura(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers |= {
+        COURSES: load_fixture(COURSES),
+        "core_course_get_contents": load_fixture("core_course_get_contents__sintetico"),
+    }
+    result = await call("contenido_asignatura", {"asignatura_id": 32338, "seccion": 1})
+    assert [s["nombre"] for s in result.structured_content["secciones"]] == ["Tema 1", "Prácticas"]
+
+
+async def test_contenido_asignatura_of_a_course_not_enrolled(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers["core_course_get_contents"] = {
+        "exception": "x",
+        "errorcode": "errorcoursecontextnotvalid",
+        "message": "Curso o actividad no accesible.",
+    }
+    result = await call("contenido_asignatura", {"asignatura_id": 32000})
+    assert result.is_error
+    assert "Usa un id de los que da mis_asignaturas" in result.content[0].text
+
+
 async def test_only_leer_debate_may_change_something():
     """Reading a discussion may mark its posts as read; everything else is read-only."""
     async with Client(server.mcp) as client:
@@ -293,7 +315,7 @@ async def test_only_leer_debate_may_change_something():
 async def test_instructions_mention_every_tool():
     async with Client(server.mcp) as client:
         tools = [tool.name for tool in (await client.list_tools()).tools]
-    assert len(tools) == 11
+    assert len(tools) == 12
     for tool in tools:
         assert tool in server.INSTRUCTIONS, tool
 

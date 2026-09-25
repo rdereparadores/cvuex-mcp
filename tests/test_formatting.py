@@ -6,6 +6,7 @@ from cvuex_mcp.formatting import (
     describe_change,
     event_kind,
     html_to_text,
+    human_size,
     iso_datetime,
     module_url,
     short_text,
@@ -83,3 +84,11 @@ def test_short_text():
     assert short_text("<p>hola</p>") == "hola"
     assert short_text("<p></p>") is None
     assert short_text("a" * 10, max_chars=4) == "aaaa…"
+
+
+@pytest.mark.parametrize(
+    ("size", "shown"),
+    [(None, None), (0, None), (512, "512 B"), (2048, "2,0 KB"), (2_400_000, "2,3 MB")],
+)
+def test_human_size(size, shown):
+    assert human_size(size) == shown

@@ -249,3 +249,43 @@ class RevisionCuestionario(BaseModel):
     retroalimentacion_general: str | None
     preguntas: list[PreguntaRevisada]
     url: str
+
+
+class Fichero(BaseModel):
+    nombre: str = Field(description="Con su carpeta, si está dentro de una.")
+    tamano: str | None
+    fecha: str | None = Field(description="Última modificación (ISO 8601, hora de España).")
+
+
+class ElementoCurso(BaseModel):
+    nombre: str
+    tipo: str = Field(description="archivo, carpeta, página, enlace, texto, tarea, foro...")
+    disponible: bool = Field(description="false si el alumno aún no puede abrirlo.")
+    restriccion: str | None = Field(description="Por qué no está disponible, si Moodle lo dice.")
+    descripcion: str | None = Field(description="Texto visible en la página de la asignatura.")
+    fechas: list[str] = Field(description="Apertura, cierre, entrega... como las muestra Moodle.")
+    completado: bool | None = Field(
+        description="null si la asignatura no registra su finalización."
+    )
+    ficheros: list[Fichero]
+    apartados: list[str] = Field(description="Capítulos, si es un libro.")
+    enlace: str | None = Field(description="Dirección externa, si es un enlace.")
+    url: str | None = Field(description="Dónde abrirlo en el campus.")
+
+
+class SeccionCurso(BaseModel):
+    numero: int
+    nombre: str
+    dentro_de: str | None = Field(description="Sección que la contiene, si es una subsección.")
+    resumen: str | None
+    disponible: bool
+    restriccion: str | None
+    elementos: list[ElementoCurso]
+
+
+class ContenidoAsignatura(BaseModel):
+    asignatura: str | None
+    asignatura_id: int
+    url: str
+    secciones: list[SeccionCurso] = Field(description="En el orden de la página de la asignatura.")
+    avisos: list[str]

@@ -17,6 +17,8 @@ salvo leer_debate, que puede marcar como leídos los mensajes del debate.
 
 Qué herramienta usar:
 - mis_asignaturas: qué asignaturas cursa y su id, que las demás aceptan para filtrar.
+- contenido_asignatura: qué hay en una asignatura (temas, materiales, actividades), como
+  en su página del campus.
 
 "¿Qué tengo que hacer?"
 - proximos_plazos: "¿qué tengo esta semana?": entregas, aperturas y cierres de

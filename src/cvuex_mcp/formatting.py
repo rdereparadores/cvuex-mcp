@@ -95,6 +95,14 @@ MODULE_TYPES = {
     "lti": "herramienta externa",
     "scheduler": "cita previa",
     "reservation": "reserva",
+    "resource": "archivo",
+    "folder": "carpeta",
+    "page": "página",
+    "book": "libro",
+    "url": "enlace",
+    "label": "texto",
+    "subsection": "subsección",
+    "imscp": "paquete IMS",
 }
 
 
@@ -167,6 +175,17 @@ def calendar_day_url(site: Site, course_id: int, timestamp: int, event_id: int) 
 def short_text(html: str | None, max_chars: int = 300) -> str | None:
     """HTML → plain text cut to ``max_chars``, or None when there is no text."""
     return truncate(html_to_text(html), max_chars) or None
+
+
+def human_size(size: int | None) -> str | None:
+    """``2_400_000`` → ``"2,3 MB"``, as the Spanish UI writes it."""
+    if not size:
+        return None
+    for unit in ("B", "KB", "MB"):
+        if size < 1024:
+            return f"{size:.0f} {unit}" if unit == "B" else f"{size:.1f} {unit}".replace(".", ",")
+        size /= 1024
+    return f"{size:.1f} GB".replace(".", ",")
 
 
 def truncate(text: str, max_chars: int) -> str:
