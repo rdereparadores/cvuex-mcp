@@ -243,6 +243,44 @@ async def test_calificaciones(store, fake_moodle):
     assert len(result["detalle"]) == 7
 
 
+QUIZZES = "mod_quiz_get_quizzes_by_courses"
+ATTEMPTS = "mod_quiz_get_user_quiz_attempts"
+REVIEW = "mod_quiz_get_attempt_review"
+
+
+async def test_cuestionarios_and_revisar_cuestionario(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers |= {
+        COURSES: load_fixture(COURSES),
+        QUIZZES: load_fixture(f"{QUIZZES}__sintetico"),
+        ATTEMPTS: load_fixture(f"{ATTEMPTS}__sintetico"),
+        REVIEW: load_fixture(f"{REVIEW}__sintetico"),
+    }
+    result = (await call("cuestionarios")).structured_content
+    [attempt_id] = {
+        attempt["intento_id"]
+        for quiz in result["cuestionarios"]
+        if quiz["cuestionario"] == "Test tema 1"
+        for attempt in quiz["intentos"][:1]
+    }
+
+    review = (await call("revisar_cuestionario", {"intento_id": attempt_id})).structured_content
+    assert review["nota"] == 6.0
+    assert len(review["preguntas"]) == 5
+
+
+async def test_revisar_cuestionario_refuses_attempts_in_progress(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers[REVIEW] = {
+        "exception": "moodle_exception",
+        "errorcode": "attemptclosed",
+        "message": "Este intento ya está cerrado",
+    }
+    result = await call("revisar_cuestionario", {"intento_id": 5003})
+    assert result.is_error
+    assert "no está terminado" in result.content[0].text
+
+
 async def test_only_leer_debate_may_change_something():
     """Reading a discussion may mark its posts as read; everything else is read-only."""
     async with Client(server.mcp) as client:
@@ -255,7 +293,7 @@ async def test_only_leer_debate_may_change_something():
 async def test_instructions_mention_every_tool():
     async with Client(server.mcp) as client:
         tools = [tool.name for tool in (await client.list_tools()).tools]
-    assert len(tools) == 9
+    assert len(tools) == 11
     for tool in tools:
         assert tool in server.INSTRUCTIONS, tool
 

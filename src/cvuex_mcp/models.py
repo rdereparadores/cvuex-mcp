@@ -195,3 +195,57 @@ class Calificaciones(BaseModel):
         description="Solo al pedir una asignatura: sus actividades y totales de categoría, en el "
         "orden del libro de calificaciones."
     )
+
+
+class IntentoCuestionario(BaseModel):
+    intento_id: int = Field(description="Para revisarlo con revisar_cuestionario.")
+    numero: int = Field(description="Primer intento, segundo...")
+    fecha: str | None = Field(description="Cuándo se terminó (ISO 8601, hora de España).")
+    nota: float | None = Field(description="null si el profesor aún no deja ver la nota.")
+    retroalimentacion: str | None = Field(description="Comentario general según la nota.")
+
+
+class Cuestionario(BaseModel):
+    cuestionario: str
+    asignatura: str | None
+    asignatura_id: int
+    apertura: str | None = Field(description="Desde cuándo se puede hacer (ISO 8601).")
+    cierre: str | None = Field(description="Hasta cuándo se puede hacer (ISO 8601).")
+    intentos_permitidos: int | None = Field(description="null si son ilimitados.")
+    nota_maxima: float | None
+    intentos: list[IntentoCuestionario] = Field(description="Solo los terminados.")
+    url: str
+
+
+class ListaCuestionarios(BaseModel):
+    cuestionarios: list[Cuestionario] = Field(description="Los más recientes primero.")
+    avisos: list[str] = Field(description="Cuestionarios que no se pudieron consultar, si los hay.")
+
+
+class PreguntaRevisada(BaseModel):
+    numero: str | None
+    tipo: str = Field(description="Tipo de pregunta en Moodle: multichoice, shortanswer, essay...")
+    enunciado: str
+    tu_respuesta: str = Field(
+        description="Lo que respondió el alumno: [x] opción elegida, [ ] no elegida, "
+        "[texto] lo escrito en un hueco."
+    )
+    estado: str | None = Field(description="Correcta, Incorrecta, Parcialmente correcta...")
+    puntuacion: float | None
+    puntuacion_maxima: float | None
+    retroalimentacion: str | None
+    respuesta_correcta: str | None
+    comentario_profesor: str | None
+
+
+class RevisionCuestionario(BaseModel):
+    cuestionario: str | None
+    asignatura: str | None
+    intento_id: int
+    intento_numero: int
+    fecha: str | None = Field(description="Cuándo se terminó (ISO 8601, hora de España).")
+    nota: float | None = Field(description="null si el profesor no deja ver la nota.")
+    nota_maxima: float | None
+    retroalimentacion_general: str | None
+    preguntas: list[PreguntaRevisada]
+    url: str

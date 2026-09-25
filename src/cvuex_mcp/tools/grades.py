@@ -25,6 +25,8 @@ async def calificaciones(
     Sin asignatura, la nota total de cada asignatura. Con asignatura, además, cada
     actividad calificable con su nota, peso y comentarios del profesor, y los totales
     de cada categoría. Solo aparece lo que el profesor deja ver al alumno.
+
+    No son las notas oficiales: las del acta están en la Secretaría Virtual de la UEx.
     """
     async with campus_session(ctx) as campus:
         if asignatura_id is None:

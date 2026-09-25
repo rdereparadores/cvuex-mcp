@@ -32,4 +32,9 @@ ALLOWED_FUNCTIONS: dict[str, float] = {
     "gradereport_overview_get_course_grades": 300,
     "gradereport_user_get_grade_items": 120,
     "core_grades_get_gradeitems": 600,
+    # Quizzes: only finished attempts, and only what Moodle lets the student review.
+    # Never mod_quiz_get_attempt_data, start_attempt, process_attempt or save_attempt.
+    "mod_quiz_get_quizzes_by_courses": 600,
+    "mod_quiz_get_user_quiz_attempts": 120,
+    "mod_quiz_get_attempt_review": 300,
 }

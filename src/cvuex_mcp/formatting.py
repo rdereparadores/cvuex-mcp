@@ -44,7 +44,12 @@ def html_to_text(html: str | None) -> str:
     extractor = _TextExtractor()
     extractor.feed(html)
     extractor.close()
-    text = unescape("".join(extractor.parts)).replace("\xa0", " ")
+    return tidy_text("".join(extractor.parts))
+
+
+def tidy_text(text: str) -> str:
+    """Collapse the spaces and blank lines left behind when removing HTML tags."""
+    text = unescape(text).replace("\xa0", " ")
     lines = (re.sub(r"[ \t]+", " ", line).strip() for line in text.splitlines())
     return re.sub(r"\n{3,}", "\n\n", "\n".join(lines)).strip()
 
@@ -56,6 +61,10 @@ def course_url(site: Site, course_id: int) -> str:
 def module_url(site: Site, module_name: str, course_module_id: int) -> str:
     """Link to an activity, e.g. ``module_url(site, "assign", 123)``."""
     return f"{site.url}/mod/{module_name}/view.php?id={course_module_id}"
+
+
+def quiz_review_url(site: Site, attempt_id: int) -> str:
+    return f"{site.url}/mod/quiz/review.php?attempt={attempt_id}"
 
 
 def discussion_url(site: Site, discussion_id: int) -> str:
@@ -157,7 +166,8 @@ def calendar_day_url(site: Site, course_id: int, timestamp: int, event_id: int) 
 
 def short_text(html: str | None, max_chars: int = 300) -> str | None:
     """HTML → plain text cut to ``max_chars``, or None when there is no text."""
-    text = html_to_text(html)
-    if len(text) > max_chars:
-        text = text[:max_chars].rstrip() + "…"
-    return text or None
+    return truncate(html_to_text(html), max_chars) or None
+
+
+def truncate(text: str, max_chars: int) -> str:
+    return text if len(text) <= max_chars else text[:max_chars].rstrip() + "…"

@@ -15,9 +15,10 @@ from cvuex_mcp.tools import (
     forums,
     grades,
     notifications,
+    quizzes,
 )
 
-AREAS = (account, courses, deadlines, assignments, changes, notifications, forums, grades)
+AREAS = (account, courses, deadlines, assignments, changes, notifications, forums, grades, quizzes)
 
 
 def register_all(mcp: MCPServer) -> None:
