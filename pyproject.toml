@@ -2,8 +2,11 @@
 name = "cvuex-mcp"
 version = "0.1.0"
 description = "Servidor MCP para el Campus Virtual de la Universidad de Extremadura (CVUEx)"
+readme = "README.md"
+license = "MIT"
+license-files = ["LICENSE"]
 authors = [
-    { name = "Iván", email = "ivruizl@alumnos.unex.es" }
+    { name = "Iván Ruiz López", email = "ivruizl@alumnos.unex.es" }
 ]
 requires-python = ">=3.12"
 dependencies = [
@@ -17,6 +20,9 @@ dependencies = [
     "python-pptx>=1.0.2",
     "tzdata>=2026.4",
 ]
+
+[project.urls]
+Repository = "https://github.com/rdereparadores/cvuex-mcp"
 
 [project.scripts]
 cvuex-mcp = "cvuex_mcp.cli:main"

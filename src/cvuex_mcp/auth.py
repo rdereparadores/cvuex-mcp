@@ -1,6 +1,8 @@
 """SSO login through the UEx CAS, the same way the official Moodle app does it.
 
-1. A real browser opens ``launch.php`` with a random ``passport``.
+1. A real browser opens ``launch.php`` with a random ``passport``: the student's
+   Chrome or Edge if installed, or else Playwright's Chromium, downloaded the first
+   time. Either way with a fresh profile, so none of the student's cookies are used.
 2. The student logs in themselves (CAS → Microsoft, including MFA).
    The password never passes through this program.
 3. Moodle answers with a redirect to
@@ -14,8 +16,12 @@ import binascii
 import hashlib
 import hmac
 import secrets
+import sys
+from collections.abc import Callable
+from pathlib import Path
 
-from playwright.async_api import Response, async_playwright
+from playwright.async_api import Browser, Playwright, Response, async_playwright
+from playwright.async_api import Error as PlaywrightError
 
 from cvuex_mcp.credentials import Credentials
 from cvuex_mcp.sites import Site
@@ -24,6 +30,8 @@ SERVICE = "moodle_mobile_app"
 URL_SCHEME = "moodlemobile"
 TOKEN_URL_PREFIX = f"{URL_SCHEME}://token="
 LOGIN_TIMEOUT_SECONDS = 300
+INSTALLED_BROWSERS = ("chrome", "msedge")
+"""Playwright channels of the browsers the student may already have, in order."""
 
 
 class LoginError(Exception):
@@ -60,8 +68,12 @@ async def login_with_browser(
     *,
     timeout: float = LOGIN_TIMEOUT_SECONDS,
     headless: bool = False,
+    notify: Callable[[str], None] = lambda _message: None,
 ) -> Credentials:
-    """Open a browser for the student to log in and return the resulting credentials."""
+    """Open a browser for the student to log in and return the resulting credentials.
+
+    ``notify`` tells the student what is going on, e.g. that a browser is being downloaded.
+    """
     passport = secrets.token_hex(16)
     token_url: asyncio.Future[str] = asyncio.get_running_loop().create_future()
 
@@ -77,7 +89,7 @@ async def login_with_browser(
     async with async_playwright() as playwright:
         # A fresh, cookie-less context guarantees a new login, which is when
         # Moodle also issues the private token.
-        browser = await playwright.chromium.launch(headless=headless)
+        browser = await launch_browser(playwright, headless=headless, notify=notify)
         try:
             context = await browser.new_context()
             context.on("response", capture_token_redirect)
@@ -95,3 +107,34 @@ async def login_with_browser(
             await browser.close()
 
     return parse_token_url(url, site=site, passport=passport)
+
+
+async def launch_browser(
+    playwright: Playwright, *, headless: bool, notify: Callable[[str], None]
+) -> Browser:
+    """The student's Chrome or Edge, or else Playwright's Chromium, downloaded if needed."""
+    for channel in INSTALLED_BROWSERS:
+        try:
+            return await playwright.chromium.launch(channel=channel, headless=headless)
+        except PlaywrightError:
+            continue  # not installed (or it would not start): try the next one
+    if not Path(playwright.chromium.executable_path).exists():
+        notify(
+            "No se ha encontrado Chrome ni Edge: se descargará un navegador para el login "
+            "(solo esta vez; ocupa unos 400 MB)."
+        )
+        await install_chromium()
+    return await playwright.chromium.launch(headless=headless)
+
+
+async def install_chromium() -> None:
+    """Download Playwright's Chromium, showing its progress in the terminal. Only the
+    full browser: the login shows it, so its separate headless build is not needed."""
+    process = await asyncio.create_subprocess_exec(
+        sys.executable, "-m", "playwright", "install", "--no-shell", "chromium"
+    )
+    if await process.wait() != 0:
+        raise LoginError(
+            "No se pudo descargar el navegador para el login. "
+            "Instala Google Chrome o Microsoft Edge y vuelve a intentarlo."
+        )

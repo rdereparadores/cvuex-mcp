@@ -22,7 +22,7 @@ from cvuex_mcp.storage import materials_dir
 
 def login(store: CredentialStore) -> None:
     print(f"Abriendo el navegador para iniciar sesión en {AVUEX.name}...")
-    credentials = asyncio.run(login_with_browser(AVUEX))
+    credentials = asyncio.run(login_with_browser(AVUEX, notify=print))
     store.save(AVUEX.key, credentials)
     print(f"Sesión guardada en {store.path}")
 
