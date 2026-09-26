@@ -1,5 +1,6 @@
 """Deadlines and other dated events from the Moodle calendar."""
 
+from dataclasses import dataclass
 from typing import Any
 
 from cvuex_mcp.campus.core import Campus
@@ -18,23 +19,45 @@ MAX_EVENTS = 50  # the most Moodle returns per request
 SITE_COURSE_ID = 1  # Moodle's front page, which hosts site-wide and personal events
 
 
+@dataclass(frozen=True)
+class DatedDeadline:
+    """A deadline with what the calendar export needs besides what the student sees."""
+
+    event_id: int
+    start: int
+    duration: int
+    plazo: Plazo
+
+
 async def upcoming_deadlines(
     campus: Campus, days: int, course_id: int | None = None
 ) -> ListaPlazos:
-    """What's coming up in the calendar, by date, from two sources:
+    """What's coming up in the calendar, by date, including the pending events that
+    became overdue in the last ``OVERDUE_LOOKBACK_DAYS``."""
+    now = this_minute(campus)
+    since = now - OVERDUE_LOOKBACK_DAYS * DAY_SECONDS
+    until = now + days * DAY_SECONDS
+    deadlines = await dated_deadlines(campus, since, until, course_id)
+    return ListaPlazos(
+        desde=iso_datetime(since),
+        hasta=iso_datetime(until),
+        plazos=[deadline.plazo for deadline in deadlines],
+    )
 
-    - Events waiting for the student (submit, attempt...). Moodle only returns
-      those still pending, so overdue ones from the last ``OVERDUE_LOOKBACK_DAYS``
-      are included.
+
+async def dated_deadlines(
+    campus: Campus, pending_since: int, until: int, course_id: int | None
+) -> list[DatedDeadline]:
+    """Calendar events until ``until``, by date, from two sources:
+
+    - Events waiting for the student (submit, attempt...) from ``pending_since``.
+      Moodle only returns those still pending, so an earlier ``pending_since``
+      brings the overdue ones.
     - Every other calendar event from now on: activity openings, events the
       teacher adds, personal events... They don't require any action.
     """
-    # Minute precision keeps the cache keys stable between close calls.
-    now = int(campus.now()) // 60 * 60
-    since = now - OVERDUE_LOOKBACK_DAYS * DAY_SECONDS
-    until = now + days * DAY_SECONDS
-
-    pending = await _action_events(campus, since, until, course_id)
+    now = this_minute(campus)
+    pending = await _action_events(campus, pending_since, until, course_id)
     pending_ids = {event["id"] for event in pending}
     others = [
         event
@@ -43,30 +66,52 @@ async def upcoming_deadlines(
     ]
     course_names = {c.id: c.nombre for c in await campus.courses("all")} if others else {}
 
-    dated = [(event["timesort"], _pending_deadline(event, now)) for event in pending]
-    dated += [
-        (event["timestart"], _calendar_deadline(campus, event, now, course_names))
+    deadlines = [
+        DatedDeadline(
+            event["id"], event["timesort"], event["timeduration"], _pending_deadline(event, now)
+        )
+        for event in pending
+    ]
+    deadlines += [
+        DatedDeadline(
+            event["id"],
+            event["timestart"],
+            event["timeduration"],
+            _calendar_deadline(campus, event, now, course_names),
+        )
         for event in others
     ]
-    dated.sort(key=lambda pair: pair[0])
-    return ListaPlazos(
-        desde=iso_datetime(since),
-        hasta=iso_datetime(until),
-        plazos=[deadline for _, deadline in dated],
-    )
+    return sorted(deadlines, key=lambda deadline: deadline.start)
+
+
+def this_minute(campus: Campus) -> int:
+    """Minute precision keeps the cache keys stable between close calls."""
+    return int(campus.now()) // 60 * 60
 
 
 async def _action_events(
     campus: Campus, since: int, until: int, course_id: int | None
 ) -> list[dict[str, Any]]:
+    """Every pending event of the period, page by page."""
     window = {"timesortfrom": since, "timesortto": until, "limitnum": MAX_EVENTS}
-    if course_id is None:
-        answer = await campus.call("core_calendar_get_action_events_by_timesort", **window)
-    else:
-        answer = await campus.call(
-            "core_calendar_get_action_events_by_course", courseid=course_id, **window
-        )
-    return answer["events"]
+    events: list[dict[str, Any]] = []
+    after = 0
+    while True:
+        if course_id is None:
+            answer = await campus.call(
+                "core_calendar_get_action_events_by_timesort", aftereventid=after, **window
+            )
+        else:
+            answer = await campus.call(
+                "core_calendar_get_action_events_by_course",
+                courseid=course_id,
+                aftereventid=after,
+                **window,
+            )
+        events += answer["events"]
+        if len(answer["events"]) < MAX_EVENTS:
+            return events
+        after = answer["events"][-1]["id"]
 
 
 async def _calendar_events(

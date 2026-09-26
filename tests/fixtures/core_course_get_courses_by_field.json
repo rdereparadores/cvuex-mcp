@@ -1,0 +1,155 @@
+{
+  "courses": [
+    {
+      "id": 32338,
+      "fullname": "APRENDIZAJE AUTOMÁTICO Y APRENDIZAJE PROFUNDO",
+      "displayname": "APRENDIZAJE AUTOMÁTICO Y APRENDIZAJE PROFUNDO",
+      "shortname": "32338",
+      "courseimage": "https://campusvirtual.unex.es/zonauex/avuex/pluginfile.php/2819996/course/generated/course.svg",
+      "categoryid": 10747,
+      "categoryname": "Máster Universitario en Ingeniería Informática",
+      "sortorder": 1840005,
+      "summary": "",
+      "summaryformat": 1,
+      "summaryfiles": [],
+      "overviewfiles": [],
+      "showactivitydates": true,
+      "showcompletionconditions": null,
+      "contacts": [
+        {
+          "id": 1001,
+          "fullname": "Persona 1"
+        },
+        {
+          "id": 1002,
+          "fullname": "Persona 2"
+        }
+      ],
+      "enrollmentmethods": [
+        "manual",
+        "database"
+      ],
+      "format": "topics",
+      "showgrades": 1,
+      "newsitems": 5,
+      "startdate": 1789855200,
+      "enddate": 1821391200,
+      "maxbytes": 262144000,
+      "showreports": 1,
+      "visible": 1,
+      "groupmode": 0,
+      "groupmodeforce": 0,
+      "defaultgroupingid": 0,
+      "enablecompletion": 0,
+      "completionnotify": 0,
+      "lang": "",
+      "theme": "",
+      "marker": 0,
+      "filters": [
+        {
+          "filter": "pumukitmedia",
+          "localstate": 0,
+          "inheritedstate": 1
+        },
+        {
+          "filter": "mediaplugin",
+          "localstate": 0,
+          "inheritedstate": 1
+        },
+        {
+          "filter": "mathjaxloader",
+          "localstate": 0,
+          "inheritedstate": 1
+        }
+      ],
+      "courseformatoptions": [
+        {
+          "name": "hiddensections",
+          "value": 0
+        },
+        {
+          "name": "coursedisplay",
+          "value": 0
+        },
+        {
+          "name": "indentation",
+          "value": "0"
+        }
+      ]
+    },
+    {
+      "id": 32368,
+      "fullname": "GESTIÓN E INNOVACIÓN EN ENTORNOS TIC",
+      "displayname": "GESTIÓN E INNOVACIÓN EN ENTORNOS TIC",
+      "shortname": "32368",
+      "courseimage": "https://campusvirtual.unex.es/zonauex/avuex/pluginfile.php/2825663/course/generated/course.svg",
+      "categoryid": 10745,
+      "categoryname": "Máster Universitario en Ingeniería de Telecomunicación",
+      "sortorder": 1830001,
+      "summary": "",
+      "summaryformat": 1,
+      "summaryfiles": [],
+      "overviewfiles": [],
+      "showactivitydates": true,
+      "showcompletionconditions": null,
+      "contacts": [
+        {
+          "id": 1003,
+          "fullname": "Persona 3"
+        }
+      ],
+      "enrollmentmethods": [
+        "manual",
+        "database"
+      ],
+      "format": "topics",
+      "showgrades": 1,
+      "newsitems": 5,
+      "startdate": 1790287200,
+      "enddate": 1821823200,
+      "maxbytes": 262144000,
+      "showreports": 1,
+      "visible": 1,
+      "groupmode": 0,
+      "groupmodeforce": 0,
+      "defaultgroupingid": 0,
+      "enablecompletion": 0,
+      "completionnotify": 0,
+      "lang": "",
+      "theme": "",
+      "marker": 0,
+      "filters": [
+        {
+          "filter": "pumukitmedia",
+          "localstate": 0,
+          "inheritedstate": 1
+        },
+        {
+          "filter": "mediaplugin",
+          "localstate": 0,
+          "inheritedstate": 1
+        },
+        {
+          "filter": "mathjaxloader",
+          "localstate": 0,
+          "inheritedstate": 1
+        }
+      ],
+      "courseformatoptions": [
+        {
+          "name": "hiddensections",
+          "value": 0
+        },
+        {
+          "name": "coursedisplay",
+          "value": 0
+        },
+        {
+          "name": "indentation",
+          "value": "0"
+        }
+      ]
+    }
+  ],
+  "warnings": []
+}

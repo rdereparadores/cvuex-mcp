@@ -134,3 +134,30 @@ async def test_other_grade_errors_are_not_hidden():
     fake.answers[GRADE_ITEMS] = {"exception": "x", "errorcode": "servererror", "message": "Boom"}
     with pytest.raises(MoodleError, match="Boom"):
         await course_grades(campus, 32338)
+
+
+async def test_categories_with_only_hidden_items():
+    """Seen on the campus: categories whose items are all hidden from the student.
+
+    Without visible items there is no name for them; without a grade, they are left out.
+    """
+    campus, fake = campus_with_grades()
+    answer = load_fixture(f"{GRADE_ITEMS}__sintetico")
+    items = answer["usergrades"][0]["gradeitems"]
+    empty, graded = (dict(items[2], id=id, iteminstance=id) for id in (51990, 51991))
+    empty["gradeformatted"] = "-"
+    items[:0] = [empty, graded]
+    fake.answers[GRADE_ITEMS] = answer
+
+    detail = (await course_grades(campus, 32338)).detalle
+    assert [item.actividad for item in detail[:2]] == ["Total de la categoría", "Práctica 1"]
+    assert detail[0].nota == "8,50"
+
+
+async def test_items_that_are_not_graded_have_no_range():
+    """Seen on the campus: Moodle formats their range as a lone dash."""
+    campus, fake = campus_with_grades()
+    answer = load_fixture(f"{GRADE_ITEMS}__sintetico")
+    answer["usergrades"][0]["gradeitems"][0]["rangeformatted"] = "&ndash;"
+    fake.answers[GRADE_ITEMS] = answer
+    assert (await course_grades(campus, 32338)).detalle[0].rango is None

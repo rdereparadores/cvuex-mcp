@@ -47,6 +47,11 @@ PERSON_NAME_KEYS = {
 EMAIL_KEYS = {"email"}
 # "fullname" also names courses: it is personal only inside an object describing a person.
 PERSON_MARKERS = PERSON_NAME_KEYS | EMAIL_KEYS | {"initials", "profileimageurl", "userpictureurl"}
+# Lists whose items are people even without those markers, e.g. a course's teachers
+# ({"id": …, "fullname": …}).
+PEOPLE_LISTS = {"contacts"}
+# What a person writes about themselves (office, phone, office hours...).
+PERSON_FREE_TEXT_KEYS = {"description", "city"}
 USER_ID_KEYS = {"userid", "useridfrom", "useridto", "authorid", "usermodified"}
 # Links to a user's profile carry their id, e.g. forum post authors.
 PROFILE_URL_PATTERN = re.compile(r"(/user/(?:view|profile)\.php\?id=)(\d+)")
@@ -137,23 +142,23 @@ class Anonymizer:
         self._collect_people(data)
         return self._rewrite(data)
 
-    def _collect_people(self, data: Any) -> None:
+    def _collect_people(self, data: Any, of_people: bool = False) -> None:
         """First pass: learn every name, username and email, so they can also be
         replaced where they appear inside other texts."""
         if isinstance(data, dict):
-            is_person = not PERSON_MARKERS.isdisjoint(data)
+            is_person = of_people or not PERSON_MARKERS.isdisjoint(data)
             for key, value in data.items():
                 if key == "id" and is_person and isinstance(value, int):
                     self._user_id(value)
                 elif not (isinstance(value, str) and value):
-                    self._collect_people(value)
+                    self._collect_people(value, key in PEOPLE_LISTS)
                 elif key in EMAIL_KEYS:
                     self._people.setdefault(value, f"persona{next(self._next_person)}@example.com")
                 elif key in PERSON_NAME_KEYS or (key == "fullname" and is_person):
                     self._person(value)
         elif isinstance(data, list):
             for item in data:
-                self._collect_people(item)
+                self._collect_people(item, of_people)
 
     def _person(self, real: str) -> str:
         return self._people.setdefault(real, f"Persona {next(self._next_person)}")
@@ -163,13 +168,15 @@ class Anonymizer:
 
     def _rewrite(self, data: Any, key: str = "", in_person: bool = False) -> Any:
         if isinstance(data, dict):
-            is_person = not PERSON_MARKERS.isdisjoint(data)
+            is_person = key in PEOPLE_LISTS or not PERSON_MARKERS.isdisjoint(data)
             return {k: self._rewrite(v, k, is_person) for k, v in data.items()}
         if isinstance(data, list):
             return [self._rewrite(item, key) for item in data[: self.max_items]]
+        if key in PERSON_FREE_TEXT_KEYS and in_person and data:
+            return "Texto de ejemplo."
         if (key in USER_ID_KEYS or (key == "id" and in_person)) and isinstance(data, int):
             return self._user_id(data) if data > 0 else data
-        if key.endswith(("imageurl", "pictureurl", "profileimage")):
+        if key.endswith(("imageurl", "imageurlsmall", "pictureurl", "profileimage")):
             return "https://moodle.example/pix/u/f1.png"
         if key.endswith("initials") and isinstance(data, str):
             return "XX"

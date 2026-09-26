@@ -15,6 +15,14 @@ from cvuex_mcp.sites import Site
 CourseClassification = Literal["inprogress", "past", "future", "all"]
 
 
+class CourseNotEnrolledError(Exception):
+    def __init__(self, course_id: int) -> None:
+        super().__init__(
+            f"No estás matriculado en la asignatura {course_id}. "
+            "Usa un id de los que da mis_asignaturas."
+        )
+
+
 class FunctionNotAllowedError(Exception):
     def __init__(self, function: str) -> None:
         super().__init__(f"La función '{function}' no está permitida en este servidor.")
@@ -50,13 +58,19 @@ class Campus:
     def now(self) -> float:
         return self._clock()
 
-    async def call(self, function: str, **params: Any) -> Any:
-        """Call a Moodle function, if allowed, reusing a cached answer when possible."""
+    async def call(self, function: str, *, fresh: bool = False, **params: Any) -> Any:
+        """Call a Moodle function, if allowed, reusing a cached answer when possible.
+
+        ``fresh`` skips the cached answer, for when it must reflect the campus right now.
+        """
         if function not in ALLOWED_FUNCTIONS:
             raise FunctionNotAllowedError(function)
         key = (function, tuple(sorted(encode_params(params).items())))
         return await self._cache.get_or_load(
-            key, ALLOWED_FUNCTIONS[function], lambda: self.moodle.call(function, **params)
+            key,
+            ALLOWED_FUNCTIONS[function],
+            lambda: self.moodle.call(function, **params),
+            fresh=fresh,
         )
 
     async def site_info(self) -> SiteInfo:
@@ -91,3 +105,12 @@ class Campus:
             )
             for course in answer["courses"]
         ]
+
+    async def enrolled_courses(self, course_id: int | None) -> list[Asignatura]:
+        """The course ``course_id`` (any, even a past one), or those in progress if None."""
+        if course_id is None:
+            return await self.courses("inprogress")
+        courses = [course for course in await self.courses("all") if course.id == course_id]
+        if not courses:
+            raise CourseNotEnrolledError(course_id)
+        return courses

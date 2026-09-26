@@ -53,6 +53,9 @@ def test_campus_urls():
     [
         ("discussions", 2, "debates nuevos o con respuestas nuevas (2)"),
         ("usergrades", 0, "calificaciones nuevas o modificadas"),
+        # Seen on the campus: files attached to a task and a SCORM package.
+        ("introattachmentfiles", 1, "ficheros nuevos o modificados (1)"),
+        ("packagefiles", 1, "ficheros nuevos o modificados (1)"),
         ("desconocido", 0, "desconocido"),
     ],
 )

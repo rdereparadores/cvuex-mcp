@@ -1,20 +1,23 @@
 """End-to-end tests of the MCP tools through an in-memory MCP client."""
 
+import asyncio
 import time
 
 import pytest
-from helpers import COURSES, FakeMoodle, load_fixture
+from helpers import COURSES, FakeMoodle, campus_files, load_fixture, make_pdf
 from mcp.client import Client
 
 from cvuex_mcp import runtime, server
 from cvuex_mcp.credentials import Credentials, CredentialStore
 from cvuex_mcp.rate_limit import RateLimiter
 from cvuex_mcp.state import PersistentState
-from cvuex_mcp.storage import HOME_ENV_VAR
+from cvuex_mcp.storage import HOME_ENV_VAR, MATERIALS_ENV_VAR
 from cvuex_mcp.tools import changes as changes_tool
+from cvuex_mcp.tools import materials as materials_tool
 
 SITE_INFO = "core_webservice_get_site_info"
 NO_DISCUSSIONS = {"discussions": [], "warnings": []}
+COURSES_32338 = "APRENDIZAJE AUTOMÁTICO Y APRENDIZAJE PROFUNDO"
 
 
 @pytest.fixture
@@ -288,7 +291,13 @@ async def test_contenido_asignatura(store, fake_moodle):
         "core_course_get_contents": load_fixture("core_course_get_contents__sintetico"),
     }
     result = await call("contenido_asignatura", {"asignatura_id": 32338, "seccion": 1})
-    assert [s["nombre"] for s in result.structured_content["secciones"]] == ["Tema 1", "Prácticas"]
+    assert not result.is_error  # the client checks the answer against the tool's schema
+    sections = result.structured_content["secciones"]
+    assert [s["nombre"] for s in sections] == ["Tema 1", "Prácticas"]
+    notes = sections[0]["elementos"][0]
+    assert "enlace" not in notes  # empty fields are left out
+    assert ": null" not in result.content[0].text
+    assert ": []" not in result.content[0].text
 
 
 async def test_contenido_asignatura_of_a_course_not_enrolled(store, fake_moodle):
@@ -303,19 +312,148 @@ async def test_contenido_asignatura_of_a_course_not_enrolled(store, fake_moodle)
     assert "Usa un id de los que da mis_asignaturas" in result.content[0].text
 
 
-async def test_only_leer_debate_may_change_something():
-    """Reading a discussion may mark its posts as read; everything else is read-only."""
+async def test_contacto_profesorado(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers |= {
+        COURSES: load_fixture(COURSES),
+        "core_course_get_courses_by_field": load_fixture("core_course_get_courses_by_field"),
+        "core_user_get_users_by_field": load_fixture("core_user_get_users_by_field"),
+    }
+    result = await call("contacto_profesorado", {"asignatura_id": 32338})
+    assert not result.is_error  # the client checks the answer against the tool's schema
+    [course] = result.structured_content["asignaturas"]
+    assert [t["correo"] for t in course["profesores"]] == [
+        "persona1@example.com",
+        "persona2@example.com",
+    ]
+
+
+async def test_contacto_profesorado_of_a_course_not_enrolled(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers[COURSES] = load_fixture(COURSES)
+    result = await call("contacto_profesorado", {"asignatura_id": 32000})
+    assert result.is_error
+    assert "Usa un id de los que da mis_asignaturas" in result.content[0].text
+
+
+async def test_exportar_calendario(store, fake_moodle, tmp_path, monkeypatch):
+    store.save("avuex", Credentials("tok"))
+    monkeypatch.setenv(MATERIALS_ENV_VAR, str(tmp_path / "CVUEx"))
+    events = load_fixture("core_calendar_get_action_events_by_timesort__sintetico")
+    fake_moodle.answers |= {
+        COURSES: load_fixture(COURSES),
+        "core_calendar_get_action_events_by_timesort": events,
+        "core_calendar_get_calendar_events": {"events": []},
+    }
+    result = await call("exportar_calendario", {"dias": 30})
+    assert not result.is_error  # the client checks the answer against the tool's schema
+    exported = result.structured_content
+    assert exported["fichero"] == str(tmp_path / "CVUEx" / "calendario.ics")
+    assert "Google Calendar" in exported["como_importar"]
+    assert (tmp_path / "CVUEx" / "calendario.ics").read_bytes().startswith(b"BEGIN:VCALENDAR")
+
+
+@pytest.fixture
+def course_materials(store, fake_moodle, tmp_path, monkeypatch):
+    store.save("avuex", Credentials("tok"))
+    monkeypatch.setenv(MATERIALS_ENV_VAR, str(tmp_path / "CVUEx"))
+    contents = load_fixture("core_course_get_contents__sintetico")
+    fake_moodle.answers |= {COURSES: load_fixture(COURSES), "core_course_get_contents": contents}
+    fake_moodle.files = campus_files(contents)
+    return tmp_path / "CVUEx"
+
+
+async def test_sincronizar_materiales(course_materials):
+    result = (await call("sincronizar_materiales", {"asignatura_id": 32338})).structured_content
+    assert (result["estado"], result["descargados"], result["al_dia"]) == ("terminada", 7, 0)
+    assert result["carpeta"] == str(course_materials)
+    assert (course_materials / f"{COURSES_32338}/03 - Prácticas/practica2.docx").exists()
+
+    again = (await call("sincronizar_materiales", {"asignatura_id": 32338})).structured_content
+    assert (again["descargados"], again["al_dia"]) == (0, 7)
+
+
+async def test_sincronizar_materiales_reports_a_sync_still_running(course_materials, monkeypatch):
+    """A long sync goes on in the background, and is cancelled when the server stops."""
+    cancelled = asyncio.Event()
+
+    async def endless_sync(*_args, **_kwargs):
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    monkeypatch.setattr(materials_tool, "synchronize", endless_sync)
+    monkeypatch.setattr(materials_tool, "WAIT_SECONDS", 0.01)
+    async with Client(server.mcp) as client:
+        first = (await client.call_tool("sincronizar_materiales", {})).structured_content
+        second = (await client.call_tool("sincronizar_materiales", {})).structured_content
+    assert (first["estado"], second["estado"], second["fin"]) == ("en_curso", "en_curso", None)
+    assert cancelled.is_set()
+
+
+async def test_search_and_read_the_materials(course_materials, fake_moodle):
+    notes = "/2900001/mod_resource/content/0/Tema1_Introduccion.pdf"
+    fake_moodle.files[notes] = make_pdf(
+        ["Tema 1: introducción a las redes neuronales", "El perceptrón multicapa aprende pesos"]
+    )
+    await call("sincronizar_materiales", {"asignatura_id": 32338})
+
+    found = (await call("buscar_en_materiales", {"consulta": "perceptron"})).structured_content
+    [match] = found["resultados"]
+    assert (match["documento"], match["ubicacion"]) == ("Tema1_Introduccion.pdf", "página 2")
+
+    arguments = {"documento_id": match["documento_id"], "desde": match["numero"]}
+    text = (await call("leer_material", arguments)).structured_content
+    assert text["texto"] == "[Página 2]\nEl perceptrón multicapa aprende pesos"
+
+
+async def test_leer_material_explains_what_cannot_be_read(course_materials):
+    result = await call("leer_material", {"documento_id": 99})
+    assert result.is_error
+    assert "buscar_en_materiales" in result.content[0].text
+
+
+async def test_buscar_en_foros(store, fake_moodle):
+    store.save("avuex", Credentials("tok"))
+    fake_moodle.answers |= {
+        COURSES: load_fixture(COURSES),
+        FORUMS: load_fixture(FORUMS),
+        DISCUSSIONS: lambda form: (
+            load_fixture(DISCUSSIONS) if form["forumid"] == "72401" else NO_DISCUSSIONS
+        ),
+    }
+    result = (await call("buscar_en_foros", {"consulta": "videoconferencia"})).structured_content
+    [match] = result["resultados"]
+    assert (match["debate_id"], match["foro"]) == (41804, "Foro general de la asignatura")
+    assert result["indice_al_dia"]
+
+    fake_moodle.calls.clear()
+    await call("buscar_en_foros", {"consulta": "martes"})
+    assert DISCUSSIONS not in fake_moodle.functions_called()  # refreshed less than 10 min ago
+
+
+async def test_only_expected_tools_change_something():
+    """Reading discussions may mark their posts as read, and syncing and exporting the
+    calendar write the student's files; nothing else changes anything, and nothing is
+    destructive."""
     async with Client(server.mcp) as client:
         tools = (await client.list_tools()).tools
-    changing = [tool.name for tool in tools if not tool.annotations.read_only_hint]
-    assert changing == ["leer_debate"]
+    changing = {tool.name for tool in tools if not tool.annotations.read_only_hint}
+    assert changing == {
+        "leer_debate",
+        "buscar_en_foros",
+        "sincronizar_materiales",
+        "exportar_calendario",
+    }
     assert all(tool.annotations.destructive_hint is not True for tool in tools)
 
 
 async def test_instructions_mention_every_tool():
     async with Client(server.mcp) as client:
         tools = [tool.name for tool in (await client.list_tools()).tools]
-    assert len(tools) == 12
+    assert len(tools) == 18
     for tool in tools:
         assert tool in server.INSTRUCTIONS, tool
 

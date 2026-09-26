@@ -71,6 +71,11 @@ def discussion_url(site: Site, discussion_id: int) -> str:
     return f"{site.url}/mod/forum/discuss.php?d={discussion_id}"
 
 
+def profile_url(site: Site, user_id: int, course_id: int) -> str:
+    """A user's profile as seen from one of their courses."""
+    return f"{site.url}/user/view.php?id={user_id}&course={course_id}"
+
+
 def grades_url(site: Site, course_id: int) -> str:
     """The student's grade report of a course."""
     return f"{site.url}/grade/report/user/index.php?id={course_id}"
@@ -92,6 +97,7 @@ MODULE_TYPES = {
     "scorm": "paquete SCORM",
     "h5pactivity": "H5P",
     "bigbluebuttonbn": "videoconferencia",
+    "zoom": "videoconferencia (Zoom)",
     "lti": "herramienta externa",
     "scheduler": "cita previa",
     "reservation": "reserva",
@@ -134,11 +140,19 @@ CHANGE_DESCRIPTIONS = {
     "assessmentgrades": "notas de evaluaciones nuevas",
     "attemptsfinished": "respuestas enviadas",
     "attemptsunfinished": "respuestas sin terminar",
+    "questionattempts": "respuestas a preguntas",
+    "pagesviewed": "páginas vistas",
+    "timers": "sesiones registradas",
 }
+# Other file areas are reported as "<area>files" (introattachmentfiles, packagefiles...).
+FILES_CHANGE = "ficheros nuevos o modificados"
 
 
 def describe_change(name: str, item_count: int = 0) -> str:
-    description = CHANGE_DESCRIPTIONS.get(name.removeprefix("user"), name)
+    name = name.removeprefix("user")
+    description = CHANGE_DESCRIPTIONS.get(name) or (
+        FILES_CHANGE if name.endswith("files") else name
+    )
     return f"{description} ({item_count})" if item_count else description
 
 

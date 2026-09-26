@@ -176,3 +176,20 @@ async def test_personal_calendar_event():
         None,
     )
     assert "course=1&" in plazo.url
+
+
+async def test_more_pending_events_than_one_request_returns():
+    """Moodle gives at most 50 at a time; the rest come after the last one's id."""
+    template = load_fixture(f"{BY_TIMESORT}__sintetico")["events"][1]
+    events = [dict(template, id=id, timesort=NOW + id * 60) for id in range(1, 121)]
+
+    def by_timesort(form: dict) -> dict:
+        after, limit = int(form["aftereventid"]), int(form["limitnum"])
+        return {"events": [event for event in events if event["id"] > after][:limit]}
+
+    campus, fake = campus_with_events(by_timesort)
+    result = await upcoming_deadlines(campus, days=14)
+
+    assert len(result.plazos) == 120
+    pages = [call["aftereventid"] for call in fake.calls if call["wsfunction"] == BY_TIMESORT]
+    assert pages == ["0", "50", "100"]

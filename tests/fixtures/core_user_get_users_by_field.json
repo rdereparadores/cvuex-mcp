@@ -1,0 +1,53 @@
+[
+  {
+    "id": 1001,
+    "firstname": "Nombre1",
+    "lastname": "Apellido1",
+    "fullname": "Persona 1",
+    "initials": "XX",
+    "email": "persona1@example.com",
+    "lastaccess": 1790000000,
+    "suspended": false,
+    "timezone": "99",
+    "description": "<p><strong>Tutorías:</strong> martes y miércoles de 10:00 a 12:00.</p><p>Despacho 1.23, edificio de Informática.</p>",
+    "descriptionformat": 1,
+    "city": "",
+    "country": "ES",
+    "profileimageurlsmall": "https://moodle.example/pix/u/f1.png",
+    "profileimageurl": "https://moodle.example/pix/u/f1.png"
+  },
+  {
+    "id": 1002,
+    "firstname": "Nombre2",
+    "lastname": "Apellido2",
+    "fullname": "Persona 2",
+    "initials": "XX",
+    "email": "persona2@example.com",
+    "lastaccess": 1790000000,
+    "suspended": false,
+    "timezone": "99",
+    "description": "",
+    "descriptionformat": 1,
+    "city": "",
+    "country": "ES",
+    "profileimageurlsmall": "https://moodle.example/pix/u/f1.png",
+    "profileimageurl": "https://moodle.example/pix/u/f1.png"
+  },
+  {
+    "id": 1003,
+    "firstname": "Nombre3",
+    "lastname": "Apellido3",
+    "fullname": "Persona 3",
+    "initials": "XX",
+    "email": "persona3@example.com",
+    "lastaccess": 1790000000,
+    "suspended": false,
+    "timezone": "99",
+    "description": "<p>Departamento de Ingeniería de Sistemas Informáticos y Telemáticos</p>",
+    "descriptionformat": 1,
+    "city": "",
+    "country": "ES",
+    "profileimageurlsmall": "https://moodle.example/pix/u/f1.png",
+    "profileimageurl": "https://moodle.example/pix/u/f1.png"
+  }
+]

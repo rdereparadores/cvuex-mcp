@@ -182,8 +182,8 @@ def _question(question: dict[str, Any]) -> PreguntaRevisada:
 
 
 def _number(value: str | float | None) -> float | None:
-    """Question marks come as text, with a decimal point."""
+    """Question marks come as text in the campus's format, e.g. "0,50"."""
     try:
-        return float(value) if value not in (None, "") else None
+        return float(str(value).replace(",", ".")) if value not in (None, "") else None
     except ValueError:
         return None

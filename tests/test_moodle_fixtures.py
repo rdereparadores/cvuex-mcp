@@ -119,3 +119,25 @@ def test_post_authors_are_replaced_with_their_profile_links():
         "profile": f"https://campus/user/view.php?id={fake_id}&course=7",
         "profileimage": "https://moodle.example/pix/u/f1.png",
     }
+
+
+def test_course_contacts_are_people():
+    """A course's teachers come as just an id and a name, the same as in their profiles."""
+    contacts = [{"id": 42, "fullname": "Ana"}]
+    course = {"id": 7, "fullname": "COMPUTACIÓN GRÁFICA", "contacts": contacts}
+    profile = {
+        "id": 42,
+        "fullname": "Ana",
+        "email": "ana@unex.es",
+        "description": "<p>Tutorías: lunes. Tel. 924 000 000</p>",
+        "city": "Badajoz",
+        "profileimageurlsmall": "https://campus/pluginfile.php/99/user/icon/f2",
+    }
+    result = anonymize({"courses": [course], "users": [profile]})
+    [contact] = result["courses"][0]["contacts"]
+    [user] = result["users"]
+    assert result["courses"][0]["fullname"] == "COMPUTACIÓN GRÁFICA"
+    assert contact["id"] == user["id"] != 42
+    assert contact["fullname"] == user["fullname"] != "Ana"
+    assert user["description"] == user["city"] == "Texto de ejemplo."
+    assert user["profileimageurlsmall"] == "https://moodle.example/pix/u/f1.png"

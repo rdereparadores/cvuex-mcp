@@ -37,4 +37,8 @@ ALLOWED_FUNCTIONS: dict[str, float] = {
     "mod_quiz_get_quizzes_by_courses": 600,
     "mod_quiz_get_user_quiz_attempts": 120,
     "mod_quiz_get_attempt_review": 300,
+    # Teachers: the course's contacts, then their profile. Unlike
+    # core_user_view_user_profile, get_users_by_field doesn't log a profile view.
+    "core_course_get_courses_by_field": 86400,
+    "core_user_get_users_by_field": 86400,
 }

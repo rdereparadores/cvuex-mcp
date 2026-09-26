@@ -37,7 +37,7 @@ async def announcements(
         course_ids = [course_id]
 
     found = []
-    for forum in await _forums(campus, course_ids):
+    for forum in await course_forums(campus, course_ids):
         if forum["type"] not in ANNOUNCEMENT_FORUM_TYPES:
             continue
         answer = await campus.call(
@@ -78,7 +78,7 @@ async def read_discussion(campus: Campus, discussion_id: int) -> Debate:
         raise DiscussionNotFoundError(discussion_id) from error
     posts = answer["posts"]
     first = next((post for post in posts if not post["hasparent"]), posts[0])
-    forum_names = {f["id"]: f["name"] for f in await _forums(campus, [answer["courseid"]])}
+    forum_names = {f["id"]: f["name"] for f in await course_forums(campus, [answer["courseid"]])}
     course_names = {c.id: c.nombre for c in await campus.courses("all")}
     return Debate(
         titulo=first["subject"],
@@ -90,7 +90,7 @@ async def read_discussion(campus: Campus, discussion_id: int) -> Debate:
     )
 
 
-async def _forums(campus: Campus, course_ids: list[int]) -> list[dict[str, Any]]:
+async def course_forums(campus: Campus, course_ids: list[int]) -> list[dict[str, Any]]:
     return await campus.call("mod_forum_get_forums_by_courses", courseids=course_ids)
 
 
@@ -108,7 +108,8 @@ def _announcement(
         foro=forum["name"],
         titulo=discussion["name"],
         autor=discussion.get("userfullname"),
-        fecha=iso_datetime(discussion["created"]),
+        # A discussion can be set to show from a later date; Moodle then dates it so.
+        fecha=iso_datetime(max(discussion["created"], discussion.get("timestart") or 0)),
         ultima_respuesta=iso_datetime(discussion["timemodified"]) if replies else None,
         mensaje=short_text(discussion["message"], MESSAGE_PREVIEW_CHARS) or "",
         respuestas=replies,

@@ -36,6 +36,7 @@ VOID_TAGS = {"area", "base", "br", "col", "embed", "hr", "img", "input", "link",
 LINE_BREAK_TAGS = {"br", "p", "div", "li", "tr", "fieldset", "legend", "h3", "h4", "h5"}
 # In the answer, choices are laid out with nested divs: one line per choice row only.
 CHOICE_ROW_CLASSES = {"r0", "r1"}
+INLINE_IN_ANSWER = {"div", "p", "br"}
 
 
 @dataclass
@@ -141,6 +142,7 @@ def _input_text(attributes: dict[str, str | None]) -> str:
 def _separator(tag: str, classes: set[str], part: str | None) -> str:
     if tag not in LINE_BREAK_TAGS:
         return ""
-    if tag == "div" and part == "answer" and not classes & CHOICE_ROW_CLASSES:
+    # A choice's text may come in paragraphs: keep each choice on one line.
+    if part == "answer" and tag in INLINE_IN_ANSWER and not classes & CHOICE_ROW_CLASSES:
         return " "
     return "\n"

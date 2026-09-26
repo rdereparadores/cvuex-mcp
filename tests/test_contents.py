@@ -28,17 +28,11 @@ async def test_real_course_with_labels_forum_and_choice():
     ]
     label, forum, choice = result.secciones[0].elementos
     assert (label.tipo, label.url, label.ficheros) == ("texto", None, [])
+    # Empty fields are left out: course pages can be long.
     assert forum.model_dump() == {
         "nombre": "Avisos",
         "tipo": "foro",
         "disponible": True,
-        "restriccion": None,
-        "descripcion": None,
-        "fechas": [],
-        "completado": None,
-        "ficheros": [],
-        "apartados": [],
-        "enlace": None,
         "url": f"{URL}/mod/forum/view.php?id=1823815",
     }
     assert choice.tipo == "consulta"

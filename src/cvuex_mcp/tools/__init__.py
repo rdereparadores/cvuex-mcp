@@ -9,21 +9,27 @@ from mcp.server.mcpserver import MCPServer
 from cvuex_mcp.tools import (
     account,
     assignments,
+    calendar,
     changes,
     contents,
     courses,
     deadlines,
     forums,
     grades,
+    materials,
     notifications,
     quizzes,
+    teachers,
 )
 
 AREAS = (
     account,
     courses,
+    teachers,
     contents,
+    materials,
     deadlines,
+    calendar,
     assignments,
     changes,
     notifications,

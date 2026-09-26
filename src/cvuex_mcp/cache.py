@@ -17,13 +17,14 @@ class TTLCache:
         self._entries: dict[Hashable, tuple[float, Any]] = {}
 
     async def get_or_load(
-        self, key: Hashable, ttl: float, load: Callable[[], Awaitable[Any]]
+        self, key: Hashable, ttl: float, load: Callable[[], Awaitable[Any]], *, fresh: bool = False
     ) -> Any:
+        """With ``fresh``, the value is loaded again even if cached (and then cached)."""
         if ttl <= 0:
             return await load()
 
         entry = self._entries.get(key)
-        if entry is not None and entry[0] > self._clock():
+        if not fresh and entry is not None and entry[0] > self._clock():
             return entry[1]
 
         value = await load()

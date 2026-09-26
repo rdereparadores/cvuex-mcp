@@ -8,6 +8,7 @@ from cvuex_mcp.models import Calificaciones, ItemCalificacion, NotaAsignatura
 from cvuex_mcp.moodle import MoodleError
 
 NO_GRADE = "-"  # how Moodle formats a missing grade
+NO_RANGE = "–"  # the range of items that aren't graded
 # Why an item doesn't count towards its category (Moodle's aggregation hints).
 WEIGHT_STATUSES = {
     "novalue": "vacío: no cuenta hasta que tenga nota",
@@ -60,7 +61,9 @@ async def course_grades(campus: Campus, course_id: int) -> Calificaciones:
     return Calificaciones(
         asignaturas=[_course_grade(campus, course_id, total, await _course_names(campus))],
         detalle=[
-            _grade_item(campus, item, categories) for item in items if item["itemtype"] != "course"
+            _grade_item(campus, item, categories)
+            for item in items
+            if item["itemtype"] != "course" and not _is_empty_category(item, categories)
         ],
     )
 
@@ -122,10 +125,20 @@ def _grade_item(
     )
 
 
+def _is_empty_category(item: dict[str, Any], categories: dict[int, str]) -> bool:
+    """A category whose items are all hidden from the student: no name to give it
+    (the names come from its visible items) and no grade. It tells nothing."""
+    return (
+        item["itemtype"] == "category"
+        and item["iteminstance"] not in categories
+        and _shown(item.get("gradeformatted")) is None
+    )
+
+
 def _shown(formatted: str | None) -> str | None:
     """A formatted value as text (it may carry icons and entities), or None if missing."""
     text = html_to_text(formatted)
-    return None if text in ("", NO_GRADE) else text
+    return None if text in ("", NO_GRADE, NO_RANGE) else text
 
 
 def _weight(item: dict[str, Any]) -> str | None:

@@ -196,3 +196,11 @@ async def test_expired_session_while_reading_a_discussion():
     fake.answers[POSTS] = UNKNOWN_DISCUSSION | {"errorcode": "invalidtoken"}
     with pytest.raises(InvalidTokenError):
         await read_discussion(campus, 41804)
+
+
+async def test_announcement_shown_from_a_later_date():
+    """Seen on the campus: Moodle dates a discussion from when it starts to be shown."""
+    answer = discussion(NOW - DAY, "Programado", created=NOW - 30 * DAY, timestart=NOW - DAY)
+    campus, _ = campus_with_forums(discussions={"72401": answer})
+    [announcement] = (await announcements(campus, days=7, limit=20)).avisos
+    assert announcement.fecha == "2026-09-23T18:00+02:00"

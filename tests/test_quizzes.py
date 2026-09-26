@@ -218,3 +218,26 @@ def test_question_html_leaves_out_hidden_text_and_scripts():
     )
     parts = question_parts(html)
     assert (parts.statement, parts.answer) == ("Enunciado", "[x] Sí")
+
+
+async def test_marks_with_decimal_comma():
+    """Seen on the campus: Moodle sends the marks formatted as in Spanish."""
+    campus, fake = campus_with_quizzes()
+    review = load_fixture(f"{REVIEW}__sintetico")
+    review["questions"][2]["mark"] = "0,50"
+    fake.answers[REVIEW] = review
+    assert (await review_attempt(campus, 5001)).preguntas[2].puntuacion == 0.5
+
+
+def test_choices_written_in_paragraphs_stay_on_one_line():
+    """Seen on the campus: the text of each choice comes inside a paragraph."""
+    html = (
+        '<div class="ablock"><div class="answer">'
+        '<div class="r0"><input type="radio" checked="checked" /><div class="d-flex">'
+        '<span class="answernumber">a. </span><div class="flex-fill"><p>Primera<br></p></div>'
+        "</div></div>"
+        '<div class="r1"><input type="radio" /><div class="d-flex">'
+        '<span class="answernumber">b. </span><div class="flex-fill"><p>Segunda</p></div>'
+        "</div></div></div></div>"
+    )
+    assert question_parts(html).answer == "[x] a. Primera\n\n[ ] b. Segunda"

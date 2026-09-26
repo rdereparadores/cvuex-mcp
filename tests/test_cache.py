@@ -61,3 +61,10 @@ async def test_clear_forgets_everything(clock):
     await cache.get_or_load("k", 10, counter.load)
     cache.clear()
     assert await cache.get_or_load("k", 10, counter.load) == 2
+
+
+async def test_fresh_loads_again_and_caches_the_new_value():
+    cache, counter = TTLCache(clock=lambda: 0), Counter()
+    assert await cache.get_or_load("k", 60, counter.load) == 1
+    assert await cache.get_or_load("k", 60, counter.load, fresh=True) == 2
+    assert await cache.get_or_load("k", 60, counter.load) == 2

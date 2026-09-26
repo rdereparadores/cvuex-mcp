@@ -8,9 +8,13 @@ authors = [
 requires-python = ">=3.12"
 dependencies = [
     "httpx>=0.28.1",
+    "icalendar>=7.3",
     "mcp>=2.2,<3",
     "platformdirs>=4.11.12",
     "playwright>=1.63.0",
+    "pypdf[crypto]>=6.19",
+    "python-docx>=1.2",
+    "python-pptx>=1.0.2",
     "tzdata>=2026.4",
 ]
 

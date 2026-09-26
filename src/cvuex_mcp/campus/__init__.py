@@ -4,6 +4,18 @@
 area (deadlines, assignments...) with functions that take a ``Campus``.
 """
 
-from cvuex_mcp.campus.core import Campus, CourseClassification, FunctionNotAllowedError, SiteInfo
+from cvuex_mcp.campus.core import (
+    Campus,
+    CourseClassification,
+    CourseNotEnrolledError,
+    FunctionNotAllowedError,
+    SiteInfo,
+)
 
-__all__ = ["Campus", "CourseClassification", "FunctionNotAllowedError", "SiteInfo"]
+__all__ = [
+    "Campus",
+    "CourseClassification",
+    "CourseNotEnrolledError",
+    "FunctionNotAllowedError",
+    "SiteInfo",
+]
